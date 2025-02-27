@@ -1,5 +1,7 @@
 # YSG
-使用[Hitomi-Downloader](https://github.com/KurtBestor/Hitomi-Downloader) 手动采集E站每天更新的画廊总计数千画廊数20多万页
+使用[Hitomi-Downloader](https://github.com/KurtBestor/Hitomi-Downloader) 手动采集E站每天更新的画廊总计数千画廊数20多万页 
+
+黑白同人志3万3千多页 其余全部是画师CG全彩图片 我主要看全彩CG着重训练的也是全彩CG图
 
 以及少量 [survivemore生存社PPT视频](https://www.appetite-game.com/survivemore/001_product.html)  文字区域切片 为了可以兼容硬字幕提取 
 
