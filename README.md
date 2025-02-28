@@ -39,3 +39,19 @@ https://github.com/ultralytics/ultralytics
 
 淫叔馆TG频道
 https://t.me/yinshuguan
+
+Quick input 使得鼠标可以像素级精确移动
+https://github.com/ChiyukiGana/Quickinput
+
+obs-studio
+https://github.com/obsproject/obs-studio
+X-AnyLabeling不能显示当前页面标签数量
+用OBS采集显示器实现一个伪标签数量显示功能 让我直观的直到当前页面上有多少个标签 
+![image](https://github.com/user-attachments/assets/b027f537-5187-4fab-b39f-b545f5780bf3)
+
+
+LiveSplit 一个游戏速通计时器 用于记录每天花费在标注上的总时间 一般都在8到10小时左右 和每一本本子标注检查完所用时间
+https://livesplit.org
+
+
+
