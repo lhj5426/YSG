@@ -50,7 +50,7 @@ X-AnyLabeling不能显示当前页面标签数量
 ![image](https://github.com/user-attachments/assets/b027f537-5187-4fab-b39f-b545f5780bf3)
 
 
-LiveSplit 一个游戏速通计时器 用于记录每天花费在标注上的总时间 一般都在8到10小时左右 和每一本本子标注检查完所用时间
+LiveSplit 一个游戏速通计时器 用于记录每一本标注的时间和每天花费在标注上的总时间
 https://livesplit.org
 
 
