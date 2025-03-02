@@ -18,7 +18,7 @@
 专门为 [ImageTrans](https://github.com/xulihang/ImageTrans-docs) 训练的
 图片文件检测模型
 
-在4090 48G显卡上进行训练
+在A100 64G显卡上进行训练
 
 # 感谢以下
 
