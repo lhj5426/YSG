@@ -1,4 +1,12 @@
-# YSG
+# <div align="center">YSG</div>
+
+<div align=center>
+<img src="https://github.com/user-attachments/assets/0439e6bf-c256-4706-a846-1043643d4cc1" width="256" height="256">
+</div>
+
+
+![image](https://github.com/user-attachments/assets/31755751-1c89-4484-8d1a-98e6fc95d079)
+
 使用[Hitomi-Downloader](https://github.com/KurtBestor/Hitomi-Downloader) 手动采集E站每天更新的画廊总计数千画廊数20多万页 
 
 黑白同人志3万3千多页 其余全部是画师CG全彩图片 我主要看全彩CG着重训练的也是全彩CG图
