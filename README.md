@@ -7,7 +7,11 @@
 
 ![image](https://github.com/user-attachments/assets/31755751-1c89-4484-8d1a-98e6fc95d079)
 
-使用[Hitomi-Downloader](https://github.com/KurtBestor/Hitomi-Downloader) 手动采集E站每天更新的画廊总计数千画廊数20多万页 
+使用[Hitomi-Downloader](https://github.com/KurtBestor/Hitomi-Downloader) 手动采集E站每天更新的画廊
+
+
+![image](https://github.com/user-attachments/assets/4a89c769-06ce-4f08-9911-e646ea97563c)
+
 
 黑白同人志3万3千多页 其余全部是画师CG全彩图片 我主要看全彩CG着重训练的也是全彩CG图
 
