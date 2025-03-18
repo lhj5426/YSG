@@ -39,6 +39,7 @@
 https://github.com/dmMaze/BallonsTranslator
 
 https://github.com/ogkalu2/comic-translate
+
 感谢大佬支持并实装
 
 
