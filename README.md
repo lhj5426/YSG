@@ -33,8 +33,11 @@
 图片文字检测模型
 另外 本模型也已实装在
 另外2款开源漫画软件上
+
 https://github.com/dmMaze/BallonsTranslator
+
 https://github.com/ogkalu2/comic-translate
+
 
 
 
