@@ -27,11 +27,16 @@
 排除各种现有OCR技术无法识别的拟声词 （我都看机翻了我还在乎你拟声词吗？）
 
 一个人没日没夜精确标注8个月 总计20万多万张图片
+在A100 64G显卡上进行训练
 
 专门为 [ImageTrans](https://github.com/xulihang/ImageTrans-docs) 训练的
-图片文件检测模型
+图片文字检测模型
+另外 本模型也已实装在
+另外2款开源漫画软件上
+https://github.com/dmMaze/BallonsTranslator
+https://github.com/ogkalu2/comic-translate
 
-在A100 64G显卡上进行训练
+
 
 # 感谢以下
 
