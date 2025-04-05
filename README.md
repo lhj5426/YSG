@@ -26,7 +26,25 @@
 
 排除各种现有OCR技术无法识别的拟声词 （我都看机翻了我还在乎你拟声词吗？）
 
-一个人没日没夜精确标注8个月 总计20万多万张图片
+一个人没日没夜精确标注9个月
+
+5个标签
+balloon
+qipao
+fangkuai
+changfangtiao
+kuangwai
+
+总计22万2千3百80张图片 97.3G数据集
+
+![dopus_2025年04月06日04点45分31秒958](https://github.com/user-attachments/assets/a9db0bf5-e61b-4a43-9a22-681b86f6a902)
+
+![dopus_2025年04月06日04点47分18秒052](https://github.com/user-attachments/assets/468344fd-f36a-49e3-8682-5f819a8fd059)
+
+![dopus_2025年04月06日04点48分04秒875](https://github.com/user-attachments/assets/c2dc4b98-59fd-4151-8303-1d81d2842643)
+
+
+
 在A100 64G显卡上进行训练
 
 专门为 [ImageTrans](https://github.com/xulihang/ImageTrans-docs) 训练的
