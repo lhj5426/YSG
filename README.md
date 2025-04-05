@@ -35,7 +35,7 @@ fangkuai
 changfangtiao
 kuangwai
 
-总计22万2千3百80张图片 97.3G数据集
+总计22万2千3百80张图片 97.3G数据集  有零有整的 标吐了 实在是不想再标了
 
 ![dopus_2025年04月06日04点45分31秒958](https://github.com/user-attachments/assets/a9db0bf5-e61b-4a43-9a22-681b86f6a902)
 
