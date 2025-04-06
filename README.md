@@ -47,6 +47,9 @@ kuangwai
 
 在A100 64G显卡上进行训练
 
+![image](https://github.com/user-attachments/assets/085967c1-b62b-4968-8d21-bb245093ea8d)
+
+
 专门为 [ImageTrans](https://github.com/xulihang/ImageTrans-docs) 训练的
 图片文字检测模型
 
