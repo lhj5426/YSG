@@ -49,6 +49,7 @@ kuangwai
 
 ![image](https://github.com/user-attachments/assets/085967c1-b62b-4968-8d21-bb245093ea8d)
 
+![image](https://github.com/user-attachments/assets/343cd3c0-4d00-49ca-ac49-636f3f37df78)
 
 专门为 [ImageTrans](https://github.com/xulihang/ImageTrans-docs) 训练的
 图片文字检测模型
