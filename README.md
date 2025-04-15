@@ -4,6 +4,10 @@
 <img src="https://github.com/user-attachments/assets/0439e6bf-c256-4706-a846-1043643d4cc1" width="256" height="256">
 </div>
 
+我的频道
+
+淫叔馆TG频道
+https://t.me/yinshuguan
 
 ![image](https://github.com/user-attachments/assets/31755751-1c89-4484-8d1a-98e6fc95d079)
 
@@ -87,8 +91,7 @@ https://hitomi.la/
 ultralytics (YOLOV11)
 https://github.com/ultralytics/ultralytics
 
-淫叔馆TG频道
-https://t.me/yinshuguan
+
 
 Quick input 使得鼠标可以像素级精确移动
 https://github.com/ChiyukiGana/Quickinput
