@@ -51,6 +51,10 @@ kuangwai
 
 ![image](https://github.com/user-attachments/assets/343cd3c0-4d00-49ca-ac49-636f3f37df78)
 
+![WGestures_2025年04月13日20点52分11秒491](https://github.com/user-attachments/assets/15d914db-8969-4823-b365-4f7828195c58)
+
+![WGestures_2025年04月10日15点46分15秒321](https://github.com/user-attachments/assets/96702ad7-e4f4-4690-95c4-4daab1dc3f28)
+
 专门为 [ImageTrans](https://github.com/xulihang/ImageTrans-docs) 训练的
 图片文字检测模型
 
