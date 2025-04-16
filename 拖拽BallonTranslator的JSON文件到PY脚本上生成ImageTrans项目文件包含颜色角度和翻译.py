@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import os
 import json
 import re
@@ -22,16 +22,20 @@ def find_itp_file(directory):
     return None
 
 def process_file(input_file, itp_file):
+    # 读取输入的 JSON 文件
     with open(input_file, encoding='utf-8') as f1:
         data1 = json.load(f1)
 
+    # 读取模板 .itp 文件
     with open(itp_file, encoding='utf-8') as f2:
         data2 = json.load(f2)
 
-    data2['dirPath'] = data1['directory']
+    # 把 directory 写入 dirPath
+    data2['dirPath'] = data1.get('directory', '')
 
-    for page, boxes in data1['pages'].items():
-        data2['images'][page] = {'boxes': []}
+    # 遍历每一页
+    for page, boxes in data1.get('pages', {}).items():
+        data2.setdefault('images', {})[page] = {'boxes': []}
 
         for box in boxes:
             bounding_rect = box.get('_bounding_rect')
@@ -54,6 +58,13 @@ def process_file(input_file, itp_file):
             else:
                 textColor = '0,0,0'
 
+            # 拼接完整文本：如果 box['text'] 是列表，就 join；如果已经是字符串，也不会出错
+            raw_text = box.get('text', '')
+            if isinstance(raw_text, list):
+                full_text = ''.join(raw_text)
+            else:
+                full_text = str(raw_text)
+
             data2['images'][page]['boxes'].append({
                 'degree': angle,
                 'geometry': {
@@ -62,14 +73,15 @@ def process_file(input_file, itp_file):
                     'width': w,
                     'height': h
                 },
-                'text': box['text'][0],
+                'text': full_text,
                 'textColor': textColor,
-                'target': box['translation']
+                'target': box.get('translation', '')
             })
 
+    # 输出到新的 .itp 文件（与输入 JSON 同名）
     output_file = os.path.splitext(input_file)[0] + '.itp'
     with open(output_file, 'w', encoding='utf-8') as f3:
-        json.dump(data2, f3, indent=4)
+        json.dump(data2, f3, indent=4, ensure_ascii=False)
 
     print(f'\n✅ 处理完成：{input_file}\n输出文件：{output_file}')
 
