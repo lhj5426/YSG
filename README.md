@@ -32,6 +32,15 @@ https://t.me/yinshuguan
 
  视频演示
 
+
+
+https://github.com/user-attachments/assets/845fde93-3128-41e3-8a2d-dbd971fb2e3c
+
+
+
+
+
+
 BallonsTranslator 原来的CTD
 
 
