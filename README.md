@@ -30,6 +30,39 @@ https://t.me/yinshuguan
 
 排除各种现有OCR技术无法识别的拟声词 （我都看机翻了我还在乎你拟声词吗？）
 
+ 视频演示
+
+BallonsTranslator 原来的CTD
+
+
+https://github.com/user-attachments/assets/c3f1feca-338e-4df0-b823-10ddc424ce1f
+
+
+BallonsTranslator 现在的我训练的YSGyolo
+
+
+
+
+https://github.com/user-attachments/assets/b108637e-44ea-4228-9c67-d6a4d789aade
+
+ImageTrans 原来自然场景检测
+
+
+
+https://github.com/user-attachments/assets/35206b33-d9eb-4933-ab74-81e63fee33d2
+
+
+ImageTrans 现在我训练的yolo
+
+
+
+https://github.com/user-attachments/assets/ff6234c1-3211-4a33-ae3a-872213eae99f
+
+看着不那么闹心了 现在就算是跑上千页的 手动修正也不会那么累了
+
+有的精度高的时候根本就不需要手动修正
+
+
 一个人没日没夜精确标注9个月
 
 5个标签
