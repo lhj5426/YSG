@@ -106,11 +106,9 @@ kuangwai
 
 另外 本模型也已实装在
 
-另外2款开源漫画软件上
+开源的有GUI的漫画软件BallonsTranslator上
 
 https://github.com/dmMaze/BallonsTranslator
-
-https://github.com/ogkalu2/comic-translate
 
 感谢大佬支持并实装
 
