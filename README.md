@@ -112,7 +112,21 @@ https://github.com/dmMaze/BallonsTranslator
 
 感谢大佬支持并实装
 
+2025年04月25日
 
+使用 https://docs.ultralytics.com/zh/models/rtdetr/#usage-examples
+
+百度百度RT-DETR 使用27595张图 总数据量的10%左右
+
+![WGestures_2025年04月24日23点07分24秒078](https://github.com/user-attachments/assets/d7f44877-b623-4301-93cf-138d7a00f601)
+
+ 训练的模型
+
+![image](https://github.com/user-attachments/assets/693c6ae5-f520-4f14-9b4c-1de760c85357)
+
+检测效果在一些漫画上效果要比 yoloV11用22万张训练的效果要好
+
+总结出来个道理 数据量不在多少 而在是否选对了训练的模型 
 
 # 感谢以下
 
