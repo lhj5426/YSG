@@ -124,6 +124,9 @@ https://github.com/dmMaze/BallonsTranslator
 
 ![image](https://github.com/user-attachments/assets/693c6ae5-f520-4f14-9b4c-1de760c85357)
 
+![image](https://github.com/user-attachments/assets/aec46bbc-8440-43b1-891e-37e8ca99f3f9)
+
+
 检测效果在一些漫画上效果要比 yoloV11用22万张训练的效果要好
 
 总结出来个道理 数据量不在多少 而在是否选对了训练的模型 
