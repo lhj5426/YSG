@@ -30,6 +30,9 @@ https://t.me/yinshuguan
 
 排除各种现有OCR技术无法识别的拟声词 （我都看机翻了我还在乎你拟声词吗？）
 
+
+模型已上传到 https://huggingface.co/YSGforMTL/YSGYoloDetector
+
  视频演示
 
 
