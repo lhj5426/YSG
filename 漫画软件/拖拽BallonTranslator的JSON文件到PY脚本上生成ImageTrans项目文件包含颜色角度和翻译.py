@@ -52,10 +52,19 @@ def process_file(input_file, itp_file):
 
             if extracted_rgb:
                 textColor = ','.join(map(str, extracted_rgb))
+            elif 'fontformat' in box and 'frgb' in box['fontformat']:
+                # Extract color from fontformat -> frgb
+                textColor = ','.join(map(str, box['fontformat']['frgb']))
             elif fg_colors:
                 textColor = ','.join(map(str, map(int, fg_colors)))
             else:
                 textColor = '0,0,0'
+
+            # Extract shadow color from srgb if available
+            if 'fontformat' in box and 'srgb' in box['fontformat']:
+                shadowColor = ','.join(map(str, box['fontformat']['srgb'])) + ',1'
+            else:
+                shadowColor = '0,0,0,1'  # Default shadow color
 
             raw_text = box.get('text', '')
             if isinstance(raw_text, list):
@@ -68,6 +77,7 @@ def process_file(input_file, itp_file):
                 'geometry': {'X': x, 'Y': y, 'width': w, 'height': h},
                 'text': full_text,
                 'textColor': textColor,
+                'shadowColor': shadowColor,
                 'target': box.get('translation', '')
             })
 
