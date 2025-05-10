@@ -1,4 +1,4 @@
-﻿import torch
+import torch
 from ultralytics import YOLO
 import os
 import sys
@@ -22,30 +22,28 @@ def check_gpu():
 # 加载模型
 use_gpu = check_gpu()
 device = "cuda" if use_gpu else "cpu"
-model = YOLO(r'J:\G\Desktop\6363\runs\detect\train13\weights\best.pt', task='detect')  # 请修改为你的模型路径
+model = YOLO(r'D:\YOLO模型存放\A100 64G S150\150best.pt', task='detect')  # 请修改为你的模型路径
 
 # 设置可调参数
 BATCH_SIZE = 1                        # 批次大小
-IMG_WIDTH = 1024                         # 默认图片宽度
-IMG_HEIGHT = 1024                        # 默认图片高度
-SKIP_BIAOQIAN = False                   # 控制是否跳过已有 biaoqianTXT 文件夹 开=True 关=False
-GENERATE_MASK = False                   # 控制是否生成掩膜图 开=True 关=False
-APPEND_EXISTING_LABELS = False           # 控制是否保留现有标签 开=True 关=False
-ENABLE_FILTER = True                   # 控制是否启用过滤标签 开=True 关=False
+IMG_WIDTH = 1024                     # 默认图片宽度
+IMG_HEIGHT = 1024                    # 默认图片高度
+SKIP_BIAOQIAN = False                # 控制是否跳过已有 biaoqianTXT 文件夹 开=True 关=False
+GENERATE_MASK = False                # 控制是否生成掩膜图 开=True 关=False
+APPEND_EXISTING_LABELS = False       # 控制是否保留现有标签 开=True 关=False
+ENABLE_FILTER = False                # 控制是否启用过滤标签 开=True 关=False
 
 # 过滤标签
-FILTER_CLASSES = ['changfangtiao']  # 只保留这些类别的检测结果('balloon', 'qipao', 'fangkuai', 'changfangtiao', 'kuangwai')
+FILTER_CLASSES = ['changfangtiao']  # 只保留这些类别的检测结果
 
 # 每个类别的扩展值
 EXPAND_VALUES = {
     0: (0, 0, 0, 0),   # balloon：上5，下20，左0，右0
-    1: (0, 0, 0, 0),  # qipao：上0，下0，左30，右20
-    2: (0, 0, 0, 0),    # fangkuai：上0，下0，左0，右0
-    3: (0, 0, 0, 0),    # changfangtiao：上0，下0，左0，右0
-    4: (0, 0, 0, 0)     # kuangwai：上0，下0，左0，右0
+    1: (0, 0, 2, 3),   # qipao：上0，下0，左30，右20
+    2: (0, 0, 0, 0),   # fangkuai：上0，下0，左0，右0
+    3: (0, 0, 0, 0),   # changfangtiao：上0，下0，左0，右0
+    4: (0, 0, 0, 0)    # kuangwai：上0，下0，左0，右0
 }
-
-
 
 # 调整边界框
 def adjust_bbox(bbox, expand_values, img_width, img_height):
@@ -63,6 +61,10 @@ def adjust_bbox(bbox, expand_values, img_width, img_height):
 
 def process_image_folder(folder_path, current_folder_index, total_folders):
     try:
+        folder_name = os.path.basename(os.path.normpath(folder_path))
+        output_image_dir = os.path.join("runs", folder_name)
+        os.makedirs(output_image_dir, exist_ok=True)
+
         biaoqian_dir = os.path.join(folder_path, 'biaoqianTXT')
         if SKIP_BIAOQIAN and os.path.exists(biaoqian_dir):
             print(f"文件夹队列进度: {current_folder_index}/{total_folders}: 跳过文件夹 {folder_path}: 已存在 'biaoqianTXT' 文件夹")
@@ -82,7 +84,8 @@ def process_image_folder(folder_path, current_folder_index, total_folders):
         print(f"\n文件夹队列进度: {current_folder_index}/{total_folders}: 开始处理文件夹: {folder_path}，共找到 {total_images} 张图片。")
         os.makedirs(biaoqian_dir, exist_ok=True)
         mask_folder_path = os.path.join(folder_path, 'yolomask')
-        os.makedirs(mask_folder_path, exist_ok=True)
+        if GENERATE_MASK:
+            os.makedirs(mask_folder_path, exist_ok=True)
         custom_color = (255, 255, 255)
 
         for i, image_path in enumerate(image_paths):
@@ -90,7 +93,7 @@ def process_image_folder(folder_path, current_folder_index, total_folders):
 
             if use_gpu:
                 torch.cuda.empty_cache()
-            results = model.predict(source=image_path, save=True, show=False, device=device, verbose=False, conf=0.5, iou=0.5)
+            results = model.predict(source=image_path, save=False, show=False, device=device, verbose=False, conf=0.5, iou=0.5)
             result = results[0]
 
             image_name = os.path.splitext(os.path.basename(image_path))[0]
@@ -99,24 +102,28 @@ def process_image_folder(folder_path, current_folder_index, total_folders):
             with open(txt_path, write_mode) as f:
                 for box in result.boxes:
                     cls = int(box.cls)
-                    class_name = model.names[cls]  # 获取类别名称
+                    class_name = model.names[cls]
                     if ENABLE_FILTER and class_name not in FILTER_CLASSES:
-                        continue  # 跳过不在过滤列表中的类别
-
+                        continue
                     bbox = [cls] + box.xywhn[0].tolist()
                     expand_values = EXPAND_VALUES.get(cls, (0, 0, 0, 0))
                     adjusted_bbox = adjust_bbox(bbox, expand_values, IMG_WIDTH, IMG_HEIGHT)
                     f.write(f"{adjusted_bbox[0]} {adjusted_bbox[1]:.6f} {adjusted_bbox[2]:.6f} {adjusted_bbox[3]:.6f} {adjusted_bbox[4]:.6f}\n")
 
+            # 保存推理图像
+            img_with_boxes = result.plot()  # 带框图像
+            output_path = os.path.join(output_image_dir, os.path.basename(image_path))
+            cv2.imwrite(output_path, img_with_boxes)
+
+            # 可选生成 mask 图像
             if GENERATE_MASK:
                 img = result.orig_img
                 mask_color_map = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
                 for box in result.boxes:
                     cls = int(box.cls[0])
-                    class_name = model.names[cls]  # 获取类别名称
+                    class_name = model.names[cls]
                     if ENABLE_FILTER and class_name not in FILTER_CLASSES:
-                        continue  # 跳过不在过滤列表中的类别
-
+                        continue
                     bbox = [cls] + box.xywhn[0].tolist()
                     adjusted_bbox = adjust_bbox(bbox, EXPAND_VALUES.get(cls, (0, 0, 0, 0)), IMG_WIDTH, IMG_HEIGHT)
                     x_center, y_center, width, height = adjusted_bbox[1:]
@@ -125,7 +132,6 @@ def process_image_folder(folder_path, current_folder_index, total_folders):
                     x2 = int((x_center + width / 2) * img.shape[1])
                     y2 = int((y_center + height / 2) * img.shape[0])
                     cv2.rectangle(mask_color_map, (x1, y1), (x2, y2), custom_color, -1)
-
                 mask_filepath = os.path.join(mask_folder_path, f"{image_name}.png")
                 cv2.imwrite(mask_filepath, mask_color_map)
 
