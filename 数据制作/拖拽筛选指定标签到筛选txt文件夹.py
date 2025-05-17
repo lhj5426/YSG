@@ -2,7 +2,7 @@
 import sys
 
 # ================== 可调参数 ==================
-target_class_id = '0'  # 想要筛选的类别 ID，如 '0' 或 '1' 等
+target_class_ids = ['0', '3']  # 想要筛选的类别 ID，如 ['0', '1', '3']
 output_folder_name = '筛选TXT'  # 输出文件夹名
 # ============================================
 
@@ -27,7 +27,11 @@ def filter_txt_files(folder):
         with open(input_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
-        filtered_lines = [line for line in lines if line.strip().startswith(target_class_id + ' ')]
+        # 筛选属于目标类别的行
+        filtered_lines = [
+            line for line in lines
+            if line.strip() and line.strip().split()[0] in target_class_ids
+        ]
 
         if filtered_lines:
             with open(output_path, 'w', encoding='utf-8') as f:
