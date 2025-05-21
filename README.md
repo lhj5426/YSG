@@ -134,6 +134,46 @@ https://github.com/dmMaze/BallonsTranslator
 
 总结出来个道理 数据量不在多少 而在是否选对了训练的模型 
 
+2025年05月
+
+最近在解决的问题
+
+因为我本身不懂代码 就是看漫画不爽总要在翻译的时候先去处理一下拟声词
+
+所以打算自己训练一个模型去干掉拟声词减少每次喂给AI翻译之前都要删半天拟声词的窘境
+
+所以大树底下好乘凉 直接在大佬的开发的软件的基础上上训练一个自己的识别模型就好了
+
+但是当模型训练好之后 遇到了新的问题
+
+![image](https://github.com/user-attachments/assets/085e7f9d-bfb8-49bc-ab7d-de095d7cc474)
+
+那就是和ocr不兼容
+
+我的模型一共有 6个标签
+balloon
+qipao
+fangkuai
+changfangtiao
+kuangwai
+other
+
+唯独 qipao 是一次框选多行
+
+这就导致 有时候 多行文本OCR 会O不全
+
+![image](https://github.com/user-attachments/assets/1335e7c8-872b-4ead-9b5a-64cbf726af98)
+
+只有一条文字 一个矩形 才可以进行OCR识别
+
+现在正则调整数据的所有气泡为一条一个矩形
+
+这样就不会出现OCR不了 或者OCR不全的问题了
+
+正在解决中......
+
+
+
 # 感谢以下
 
 图片翻译器
