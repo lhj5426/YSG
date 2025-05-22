@@ -44,8 +44,10 @@ def detect():
     bytes_decoded = base64.b64decode(image)
     net_img = Image.open(BytesIO(bytes_decoded)).convert("RGB")
 
-    # 使用模型进行推理  修改传入尺寸
-    inputs = image_processor(images=net_img, return_tensors="pt", size={"shortest_edge": 640, "longest_edge": 640})
+    
+    # 使用模型进行推理（统一固定输入尺寸）
+    inputs = image_processor(images=net_img, return_tensors="pt", size={"height": 640, "width": 640})
+
 
 
     inputs = {k: v.to(device) for k, v in inputs.items()}
