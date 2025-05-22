@@ -25,7 +25,7 @@ EXPAND_VALUES = {
 }
 
 ENABLE_FILTER = True  # 控制是否启用过滤标签 开=True 关=False
-FILTER_CLASSES = ['text_bubble','text_free']  # 只保留这些类别的检测结果('0 balloon', '1 qipao', '2 fangkuai', '3 changfangtiao', '4 kuangwai') 大佬的模型 ('0 bubble', '1 text_bubble', '2 text_free')
+FILTER_CLASSES = ['bubble']  # 只保留这些类别的检测结果('0 balloon', '1 qipao', '2 fangkuai', '3 changfangtiao', '4 kuangwai') 大佬的模型 ('0 bubble', '1 text_bubble', '2 text_free')
 CONFIDENCE_THRESHOLD = 0.5  # 置信度阈值
 
 def adjust_bbox(x_center, y_center, w, h, expand_values):
@@ -44,8 +44,10 @@ def detect():
     bytes_decoded = base64.b64decode(image)
     net_img = Image.open(BytesIO(bytes_decoded)).convert("RGB")
 
-    # 处理图像
-    inputs = image_processor(images=net_img, return_tensors="pt")
+    # 使用模型进行推理  修改传入尺寸
+    inputs = image_processor(images=net_img, return_tensors="pt", size={"shortest_edge": 640, "longest_edge": 640})
+
+
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
     with torch.no_grad():
@@ -106,7 +108,7 @@ def server_static(filepath):
     return static_file(filepath, root='www')
 
 # 定义模型目录
-model_dir = r"D:\Ddown\2504261024111\local_model"  # 请确保此路径正确
+model_dir = r"D:\YOLO模型存放\RT-DETR v2 Hugging Face格式的RT-DETR模型\model"  # 请确保此路径正确
 
 # 加载模型
 model = RTDetrForObjectDetection.from_pretrained(model_dir)

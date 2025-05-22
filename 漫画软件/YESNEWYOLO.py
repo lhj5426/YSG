@@ -43,7 +43,7 @@ def detect():
     bytes_decoded = base64.b64decode(image)
     net_img = Image.open(BytesIO(bytes_decoded))
 
-    # 使用模型进行推理
+    # 使用模型进行推理  修改传入尺寸
     prediction = model.predict(source=net_img, conf=CONFIDENCE_THRESHOLD, imgsz=(1280), agnostic_nms=True)[0]
 
     ret = {}
@@ -79,7 +79,8 @@ def server_static(filepath):
     return static_file(filepath, root='www')
 
 # 加载YOLO模型
-model = YOLO(r"D:\YOLO模型存放\A100 64G N110\110best.pt")
+# model = YOLO(r"D:\YOLO模型存放\balloon\best.pt")
+model = YOLO(r"D:\YOLO模型存放\A100 64G S150\150best.pt")
 
 logger.info(model.names)
 
