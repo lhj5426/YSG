@@ -172,7 +172,26 @@ other
 
 正在解决中......
 
+2025年06月13日
 
+为了兼容OCR 重新微调原有数据 qipao标签也拆分成一字一框 的新模型 预览
+
+这个模型目前可就是ImageTrans专属了 ImageTrans 可以在OCR完之后选择是否合并
+
+而其他的软件目前没有这个自由度选择
+
+![image](https://github.com/user-attachments/assets/ab660d62-6eca-402a-9c33-acff5fe1601a)
+
+
+
+
+https://github.com/user-attachments/assets/91d6c211-b218-4391-9ba5-be74d83bb065
+
+
+
+https://github.com/user-attachments/assets/676c02dd-1c7f-41c8-b16d-67f0d132d925
+
+数据还在调整中......
 
 # 感谢以下
 
