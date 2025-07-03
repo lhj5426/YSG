@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os
@@ -6,7 +6,7 @@ import sys
 import shutil
 import torch
 from PIL import Image, ImageDraw, ImageFont
-from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
+from transformers import RTDetrV2ForObjectDetection, RTDetrImageProcessor
 from tqdm import tqdm
 import msvcrt
 
@@ -66,7 +66,7 @@ for idx, folder in enumerate(folder_list, start=1):
     print(f"文件夹{idx}：{os.path.basename(folder)}")
 
 print("\nLoading model...")
-model = RTDetrForObjectDetection.from_pretrained(model_dir)
+model = RTDetrV2ForObjectDetection.from_pretrained(model_dir)
 image_processor = RTDetrImageProcessor.from_pretrained(model_dir)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

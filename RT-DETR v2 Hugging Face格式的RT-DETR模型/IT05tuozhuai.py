@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os
 import sys
 import torch
 from PIL import Image, ImageDraw, ImageFont
-from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
+from transformers import RTDetrV2ForObjectDetection, RTDetrImageProcessor
 from tqdm import tqdm
 
 # ========== 可调参数区域 ==========
@@ -25,7 +25,7 @@ APPEND_EXISTING_LABELS = False  # 是否将检测结果追加到现有 TXT 文�
 ENABLE_FILTER = True           # 若需要过滤，仅检测指定类别时，可设为 True False          
 SAVE_INFERENCE_IMAGES = True   # 是否保存推理后带检测框的图片
 
-FILTER_CLASSES = ['text_bubble', 'text_free']  # 只保留这些类别的检测结果，例如：'bubble', 'text_bubble', 'text_free'
+FILTER_CLASSES = ['text_bubble', 'text_free']  # 只保留这些类别的检测结果，例如：'bubble', 'text_bubble', 'text_free' bubble=边框 text_bubble text_bubble=文字气泡=qipao圈内文字  text_free=自由文本=balloon无框选文字
 
 # 各类别扩展量，格式：(上, 下, 左, 右)
 EXPAND_VALUES = {
@@ -60,7 +60,7 @@ for idx, folder in enumerate(folder_list, start=1):
     print(f"文件夹{idx}：{os.path.basename(folder)}")
 
 print("\nLoading model...")
-model = RTDetrForObjectDetection.from_pretrained(model_dir)
+model = RTDetrV2ForObjectDetection.from_pretrained(model_dir)
 image_processor = RTDetrImageProcessor.from_pretrained(model_dir)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
