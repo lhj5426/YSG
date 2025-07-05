@@ -8,7 +8,10 @@ EXPAND_VALUES = {
     2: (0, 0, 0, 0),   # fangkuai
     3: (0, 0, 0, 0),   # changfangtiao
     4: (0, 0, 0, 0),   # kuangwai
-    5: (0, 0, 0, 0)    # other
+    5: (0, 0, 0, 0),     # other
+    6: (0, 0, 0, 0),     # balloon2
+    7: (0, 0, 0, 0) ,    # qipao2
+    8: (0, 0, 0, 0) ,   # changfangtiao2
 }
 
 IMG_WIDTH = 1024
