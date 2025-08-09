@@ -115,24 +115,7 @@ https://github.com/dmMaze/BallonsTranslator
 
 感谢大佬支持并实装
 
-2025年04月25日
 
-使用 https://docs.ultralytics.com/zh/models/rtdetr/#usage-examples
-
-百度百度RT-DETR 使用27595张图 总数据量的10%左右
-
-![WGestures_2025年04月24日23点07分24秒078](https://github.com/user-attachments/assets/d7f44877-b623-4301-93cf-138d7a00f601)
-
- 训练的模型
-
-![image](https://github.com/user-attachments/assets/693c6ae5-f520-4f14-9b4c-1de760c85357)
-
-![image](https://github.com/user-attachments/assets/aec46bbc-8440-43b1-891e-37e8ca99f3f9)
-
-
-检测效果在一些漫画上效果要比 yoloV11用22万张训练的效果要好
-
-总结出来个道理 数据量不在多少 而在是否选对了训练的模型 
 
 2025年05月
 
@@ -172,6 +155,7 @@ other
 
 正在解决中......
 
+
 2025年06月13日
 
 为了兼容OCR 重新微调原有数据 qipao标签也拆分成一字一框 的新模型 预览
@@ -192,6 +176,20 @@ https://github.com/user-attachments/assets/91d6c211-b218-4391-9ba5-be74d83bb065
 https://github.com/user-attachments/assets/676c02dd-1c7f-41c8-b16d-67f0d132d925
 
 数据还在调整中......
+
+2025年08月09日16点28分31秒
+
+不同类型标签的实时推理效果
+
+https://github.com/user-attachments/assets/55263255-aea8-4faa-b8a0-b4958c62a4d9
+
+https://github.com/user-attachments/assets/aa03def4-72bd-4ac9-b453-345dcc83062d
+
+https://github.com/user-attachments/assets/36a89614-5bd7-4335-af14-913a4e4ac528
+
+https://github.com/user-attachments/assets/079713cb-e49f-432f-ae13-13f2ca861918
+
+
 
 # 感谢以下
 
