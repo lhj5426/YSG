@@ -5,7 +5,8 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 from bottle import BaseRequest, route, run, request, static_file
 import base64
-from ultralytics import YOLO
+# 核心修改: 导入 RTDETR
+from ultralytics import RTDETR
 import logging
 
 # --- 基础配置 ---
@@ -15,8 +16,9 @@ logger = logging.getLogger()
 
 # ======================= 功能配置区 (已恢复完整注释) =======================
 
-# --- 1. YOLO 模型及推理参数 --- D:\YOLO模型存放\A100 64G S150\150best.pt
-YOLO_MODEL_PATH = r"J:\G\Desktop\yoloV11_40yuan\runs\train\054\weights\epoch275.pt" # 你的YOLO模型文件 (.pt) 的完整路径。
+# --- 1. RT-DETR 模型及推理参数 ---
+# 核心修改: 路径现在指向 RT-DETR 模型
+MODEL_PATH = r"D:\YOLO模型存放\百度RT-DETR\02111best.pt" # 你的 RT-DETR 模型文件 (.pt) 的完整路径。
 
 # --- 分类型的初始置信度阈值 ---
 # 在这里为需要特殊处理的类别设置专属的初始置信度，用于第一轮过滤。
@@ -30,16 +32,16 @@ PER_CLASS_CONF_CONFIG = {
 DEFAULT_INITIAL_CONF = 0.01
 
 # 全局IoU阈值：用于NMS（非极大值抑制）。此设置对所有类别生效。
-IOU_THRESHOLD = 0.91
+IOU_THRESHOLD = 0.7
 
 # 最终结果的置信度阈值：在所有处理（合并、扩展等）完成后，用于过滤最终结果。
-FINAL_CONF_THRESHOLD = 0.5
+FINAL_CONF_THRESHOLD = 0.55
 
 
 # --- 2. 类别过滤 ---
 ENABLE_FILTER = True           # 类别过滤功能的总开关。
-#FILTER_CLASSES = ['balloon', 'qipao', 'changfangtiao'] # 要保留的类别列表 (使用模型原始名)。
-FILTER_CLASSES = ['qipao'] # 要保留的类别列表 (使用模型原始名)。
+FILTER_CLASSES = ['balloon', 'qipao', 'changfangtiao'] # 要保留的类别列表 (使用模型原始名)。
+
 
 # --- 3. 智能合并功能 ---
 # 为需要合并的类别指定方向: 'vertical' 或 'horizontal'。
@@ -61,14 +63,14 @@ MAX_HORIZONTAL_GAP_FOR_HORIZONTAL_MERGE = 5
 
 
 # --- 4. 统一尺寸功能 ---
-# 统一宽度的总开关。  False   True
+# 统一宽度的总开关。
 ENABLE_STANDARDIZED_WIDTH = False 
 STANDARDIZED_WIDTHS = {
     # '类别名': 宽度值 (单位: 像素)
     'balloon': 35, 'qipao': 19, 'changfangtiao': 180
 }
 
-# 统一高度的总开关。  True  False
+# 统一高度的总开关。
 ENABLE_STANDARDIZED_HEIGHT = False
 STANDARDIZED_HEIGHTS = {
     # '类别名': 高度值 (单位: 像素)
@@ -77,11 +79,11 @@ STANDARDIZED_HEIGHTS = {
 
 
 # --- 5. 扩展功能 ---
-ENABLE_EXPANSION = False          # 边框扩展功能的总开关。 True  False
+ENABLE_EXPANSION = False          # 边框扩展功能的总 开True 关 False。
 EXPAND_VALUES = {
     # '类别名': (上扩展, 下扩展, 左扩展, 右扩展)  (单位: 像素)
-    'balloon': (0, 0, 5, 5),
-    'qipao': (0, 0, 5, 5),
+    'balloon': (5, 20, 0, 0),
+    'qipao': (-4, -2, -3, 0),
     'changfangtiao': (25, 25, 0, 0)
 }
 
@@ -90,7 +92,7 @@ EXPAND_VALUES = {
 CLASS_NAME_MAP = {}               # 可选：将原始类别名映射为更友好的名字。{'原始名': '新名字'}
 
 
-# ======================= 核心辅助函数 (已彻底重构) =======================
+# ======================= 核心辅助函数 (完全保留，无需修改) =======================
 
 def are_boxes_aligned(b1, b2, direction):
     """全新的、更健壮的对齐判断函数，同时考虑对齐度和邻近度。"""
@@ -167,17 +169,30 @@ def cluster_and_merge(boxes, is_aligned_func):
         
     return [merge_cluster(c) for c in clusters.values() if c]
 
-# ======================= Web 服务逻辑区 (无需修改) =======================
+# ======================= Web 服务逻辑区 (已适配 RT-DETR) =======================
 
 @route('/detect', method='POST')
 def detect():
-    logger.info("开始处理检测请求...")
+    logger.info("开始处理检测请求 (模型: RT-DETR)...")
     try:
         json_data = request.json; image_b64 = json_data.get("image")
         if not image_b64: return {"error": "请求中未找到图像数据"}
 
         net_img = Image.open(BytesIO(base64.b64decode(image_b64))).convert("RGB")
-        prediction = model.predict(source=net_img, conf=0.01, iou=IOU_THRESHOLD, imgsz=1280, agnostic_nms=True)[0]
+        
+        # 核心修改: 使用 RT-DETR 进行推理。
+        # 仍然使用极低的 conf=0.01 来捕获所有可能的框，交由后续逻辑进行精细化处理。
+        # RT-DETR 的 predict 返回的是一个列表，即使只处理一张图。
+        predictions = model.predict(source=net_img, conf=0.01, iou=IOU_THRESHOLD, imgsz=1024, agnostic_nms=True)
+
+        # 检查 predictions 是否为空
+        if not predictions:
+            return {"results": []}
+
+        # RT-DETR返回的是列表，我们通常只处理第一张图的结果
+        prediction = predictions[0]
+
+        # --- 后续处理逻辑与原YOLO脚本完全一致 ---
 
         initial_filtered_boxes = []
         if prediction.boxes is not None:
@@ -227,21 +242,15 @@ def detect():
             final_y_c = y_c + (b_e - t_e) / 2
             final_loc = {"left": final_x_c - f_w/2, "top": final_y_c - f_h/2, "width": f_w, "height": f_h}
             
-            original_xywh_log = f"({x_c:.3f}, {y_c:.3f}, {original_loc['width']:.3f}, {original_loc['height']:.3f})"
-            expanded_ltwh_log = f"({final_loc['left']:.3f}, {final_loc['top']:.3f}, {final_loc['width']:.3f}, {final_loc['height']:.3f})"
-            
-            logger.info(
-                f"Class: {c_name}, 原始边界框: {original_xywh_log}, 扩展后的边界框: {expanded_ltwh_log}, 置信度: {res['confidence']:.3f}"
-            )
-            
-            # 1. 将类别名添加到 location 字典中
+            # 将类别名添加到 location 字典中，以符合 ImageTrans 的要求
             final_loc["className"] = CLASS_NAME_MAP.get(c_name, c_name)
             
-            # 2. 构建符合 ImageTrans 要求的最终字典结构
+            # 构建最终字典结构
             final_results.append({
                 "location": final_loc, 
                 "confidence": res['confidence']
             })
+            
         return {"results": final_results}
 
     except Exception as e:
@@ -254,9 +263,10 @@ def server_static(filepath): return static_file(filepath, root='www')
 # ======================= 模型加载与启动 =======================
 if __name__ == '__main__':
     try:
-        model = YOLO(YOLO_MODEL_PATH)
-        logger.info(f"YOLO模型加载成功: {YOLO_MODEL_PATH} | 类别: {model.names}")
+        # 核心修改: 加载 RTDETR 模型
+        model = RTDETR(MODEL_PATH)
+        logger.info(f"RT-DETR 模型加载成功: {MODEL_PATH} | 类别: {model.names}")
     except Exception as e:
-        logger.error(f"模型加载失败，请检查路径: '{YOLO_MODEL_PATH}'. 错误: {e}", exc_info=True); exit(1)
+        logger.error(f"模型加载失败，请检查路径: '{MODEL_PATH}'. 错误: {e}", exc_info=True); exit(1)
     logger.info("启动Web服务器，监听地址: http://127.0.0.1:8085")
     run(server="paste", host='127.0.0.1', port=8085)
