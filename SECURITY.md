@@ -14,6 +14,8 @@ https://github.com/user-attachments/assets/21d877bb-78a8-4f30-8615-ff995093f721
 
 4把数据文件夹放到图片同级目录下并用脚本生成BL https://github.com/dmMaze/BallonsTranslator 伪造配置文件
 
+https://github.com/user-attachments/assets/5e92c5f8-158f-4d5b-a15b-98e3a63dd490
+
 5使用BL https://github.com/dmMaze/BallonsTranslator 导入配置 并执行OCR
 
 https://github.com/user-attachments/assets/36c114ef-a82a-4186-a47f-ac41d46c072c
