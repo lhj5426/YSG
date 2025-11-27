@@ -130,13 +130,22 @@ class RegexGeneratorApp:
         self.start_entry.grid(row=1, column=1, sticky=tk.W, pady=5, padx=(10, 0))
         ttk.Label(input_frame, text="例如: 33861").grid(row=1, column=2, sticky=tk.W, padx=(10, 0))
         
-        # 结束数字
+        # 结束数字或数量选择
         ttk.Label(input_frame, text="结束数字:").grid(row=2, column=0, sticky=tk.W, pady=5)
         self.end_var = tk.StringVar()
         self.end_var.trace('w', lambda *args: self.auto_extract_number(self.end_var))
         self.end_entry = ttk.Entry(input_frame, textvariable=self.end_var, width=30)
         self.end_entry.grid(row=2, column=1, sticky=tk.W, pady=5, padx=(10, 0))
         ttk.Label(input_frame, text="例如: 33906").grid(row=2, column=2, sticky=tk.W, padx=(10, 0))
+        
+        # 或者按数量计算
+        ttk.Label(input_frame, text="或输入数量:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        self.count_var = tk.StringVar()
+        self.count_entry = ttk.Entry(input_frame, textvariable=self.count_var, width=30)
+        self.count_entry.grid(row=3, column=1, sticky=tk.W, pady=5, padx=(10, 0))
+        
+        calc_end_btn = ttk.Button(input_frame, text="计算结束数字", command=self.calc_end_from_count)
+        calc_end_btn.grid(row=3, column=2, sticky=tk.W, padx=(10, 0))
         
         # 按钮区域
         btn_frame = ttk.Frame(main_frame)
@@ -270,6 +279,40 @@ class RegexGeneratorApp:
                 self.is_updating = True
                 var.set(extracted)
                 self.is_updating = False
+    
+    def calc_end_from_count(self):
+        """根据起始数字和数量计算结束数字"""
+        start_str = self.start_var.get().strip()
+        count_str = self.count_var.get().strip()
+        
+        if not start_str:
+            messagebox.showwarning("提示", "请先输入起始数字！")
+            return
+        
+        if not count_str:
+            messagebox.showwarning("提示", "请输入数量！")
+            return
+        
+        if not start_str.isdigit() or not count_str.isdigit():
+            messagebox.showerror("错误", "起始数字和数量必须是数字！")
+            return
+        
+        start = int(start_str)
+        count = int(count_str)
+        
+        if count <= 0:
+            messagebox.showerror("错误", "数量必须大于0！")
+            return
+        
+        # 计算结束数字 = 起始数字 + 数量 - 1
+        end = start + count - 1
+        
+        # 保持和起始数字相同的位数（补零）
+        num_width = len(start_str)
+        end_str = str(end).zfill(num_width)
+        
+        self.end_var.set(end_str)
+        self.status_var.set(f"已计算: 从 {start_str} 开始，共 {count} 个，结束于 {end_str}")
     
     def validate_input(self):
         """验证输入"""
