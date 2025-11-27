@@ -114,7 +114,8 @@ class RegexGeneratorApp:
         self.regex_text.pack(fill=tk.X, pady=(5, 10))
         
         # 序列预览
-        ttk.Label(result_frame, text="序列预览:").pack(anchor=tk.W)
+        self.preview_label_var = tk.StringVar(value="序列预览:")
+        ttk.Label(result_frame, textvariable=self.preview_label_var).pack(anchor=tk.W)
         
         preview_frame = ttk.Frame(result_frame)
         preview_frame.pack(fill=tk.BOTH, expand=True)
@@ -172,10 +173,11 @@ class RegexGeneratorApp:
             
             # 显示序列预览
             self.preview_text.delete(1.0, tk.END)
+            count = end - start + 1
             for num in range(start, end + 1):
                 self.preview_text.insert(tk.END, f"{prefix}{num}\n")
             
-            count = end - start + 1
+            self.preview_label_var.set(f"序列预览 (共 {count} 个):")
             self.status_var.set(f"已生成正则表达式，共 {count} 个序列")
             
         except Exception as e:
