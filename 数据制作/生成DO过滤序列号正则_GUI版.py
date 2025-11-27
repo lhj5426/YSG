@@ -117,6 +117,7 @@ class RegexGeneratorApp:
         # 前缀输入
         ttk.Label(input_frame, text="前缀:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.prefix_var = tk.StringVar()
+        self.prefix_var.trace('w', lambda *args: self.auto_remove_numbers(self.prefix_var))
         self.prefix_entry = ttk.Entry(input_frame, textvariable=self.prefix_var, width=30)
         self.prefix_entry.grid(row=0, column=1, sticky=tk.W, pady=5, padx=(10, 0))
         ttk.Label(input_frame, text="例如: HBSP").grid(row=0, column=2, sticky=tk.W, padx=(10, 0))
@@ -124,6 +125,7 @@ class RegexGeneratorApp:
         # 起始数字
         ttk.Label(input_frame, text="起始数字:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.start_var = tk.StringVar()
+        self.start_var.trace('w', lambda *args: self.auto_extract_number(self.start_var))
         self.start_entry = ttk.Entry(input_frame, textvariable=self.start_var, width=30)
         self.start_entry.grid(row=1, column=1, sticky=tk.W, pady=5, padx=(10, 0))
         ttk.Label(input_frame, text="例如: 33861").grid(row=1, column=2, sticky=tk.W, padx=(10, 0))
@@ -131,6 +133,7 @@ class RegexGeneratorApp:
         # 结束数字
         ttk.Label(input_frame, text="结束数字:").grid(row=2, column=0, sticky=tk.W, pady=5)
         self.end_var = tk.StringVar()
+        self.end_var.trace('w', lambda *args: self.auto_extract_number(self.end_var))
         self.end_entry = ttk.Entry(input_frame, textvariable=self.end_var, width=30)
         self.end_entry.grid(row=2, column=1, sticky=tk.W, pady=5, padx=(10, 0))
         ttk.Label(input_frame, text="例如: 33906").grid(row=2, column=2, sticky=tk.W, padx=(10, 0))
@@ -222,6 +225,51 @@ class RegexGeneratorApp:
         self.status_var = tk.StringVar(value="就绪")
         status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief=tk.SUNKEN)
         status_bar.pack(fill=tk.X, pady=(10, 0))
+        
+        # 标记，防止递归调用
+        self.is_updating = False
+    
+    def auto_remove_numbers(self, var):
+        """自动移除数字部分，只保留非数字字符"""
+        if self.is_updating:
+            return
+        
+        value = var.get()
+        if not value:
+            return
+        
+        # 移除所有数字
+        import re
+        cleaned = re.sub(r'\d+', '', value)
+        
+        # 如果清理后的值和原值不同，更新
+        if cleaned != value:
+            self.is_updating = True
+            var.set(cleaned)
+            self.is_updating = False
+    
+    def auto_extract_number(self, var):
+        """自动提取数字部分"""
+        if self.is_updating:
+            return
+        
+        value = var.get()
+        if not value:
+            return
+        
+        # 提取所有数字
+        import re
+        numbers = re.findall(r'\d+', value)
+        
+        if numbers:
+            # 取最后一个连续的数字串（通常是序列号）
+            extracted = numbers[-1]
+            
+            # 如果提取的数字和原值不同，更新
+            if extracted != value:
+                self.is_updating = True
+                var.set(extracted)
+                self.is_updating = False
     
     def validate_input(self):
         """验证输入"""
