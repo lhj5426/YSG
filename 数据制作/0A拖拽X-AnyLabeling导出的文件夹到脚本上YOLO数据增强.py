@@ -117,6 +117,10 @@ SALT_PEPPER_AMOUNT_MIN = 0.005  # 最小密度（稀疏）
 SALT_PEPPER_AMOUNT_MAX = 0.03   # 最大密度（密集但不过分）
 SALT_RATIO = 0.5                # 盐噪点（白点）比例（0.0-1.0）
 
+# 泊松噪点参数（随机缩放范围）
+POISSON_SCALE_MIN = 0.5         # 最小缩放（噪点较弱）
+POISSON_SCALE_MAX = 2.0         # 最大缩放（噪点较强）
+
 # 斑点噪点参数（随机方差范围）
 SPECKLE_VARIANCE_MIN = 0.05     # 最小方差
 SPECKLE_VARIANCE_MAX = 0.2      # 最大方差
@@ -160,7 +164,7 @@ ENABLE_ROTATION_RATIO = True
 # True: 随机选择 AUGMENTATION_RATIO 比例的图片 → 旋转+增强，其他不处理
 # False: 100%图片都旋转 → 随机选择 AUGMENTATION_RATIO 比例的图片增强
 
-AUGMENTATION_RATIO = 0.5
+AUGMENTATION_RATIO = 0.4
 # 增强比例（0.0-1.0）
 # 例如：0.5 = 50%的图片
 # 
@@ -174,7 +178,7 @@ AUGMENTATION_RATIO = 0.5
 # ========================================================================
 # 【特殊模式】原图替换模式
 # ========================================================================
-ENABLE_REPLACE_ORIGINAL = False
+ENABLE_REPLACE_ORIGINAL = True
 # 是否启用原图替换模式
 # True: 直接覆盖原文件（不生成新文件）
 # False: 生成新文件到输出文件夹（默认模式）
@@ -458,14 +462,16 @@ def add_salt_pepper_noise(img, amount=0.02, salt_ratio=0.5):
     return noisy_img
 
 
-def add_poisson_noise(img):
+def add_poisson_noise(img, scale=1.0):
     """
     添加泊松噪点（Poisson Noise）
     模拟光子计数噪声，常见于低光照环境
+    scale: 噪声缩放因子（>1增强噪点，<1减弱噪点）
     """
     vals = len(np.unique(img))
     vals = 2 ** np.ceil(np.log2(vals))
-    noisy_img = np.random.poisson(img.astype(np.float32) * vals) / float(vals)
+    # 应用缩放因子控制噪声强度
+    noisy_img = np.random.poisson(img.astype(np.float32) * vals / scale) * scale / float(vals)
     noisy_img = np.clip(noisy_img, 0, 255).astype(np.uint8)
     return noisy_img
 
@@ -495,7 +501,9 @@ def apply_noise(img, noise_type):
         amount = random.uniform(SALT_PEPPER_AMOUNT_MIN, SALT_PEPPER_AMOUNT_MAX)
         return add_salt_pepper_noise(img, amount, SALT_RATIO)
     elif noise_type == "poisson":
-        return add_poisson_noise(img)
+        # 随机选择泊松噪点缩放因子
+        scale = random.uniform(POISSON_SCALE_MIN, POISSON_SCALE_MAX)
+        return add_poisson_noise(img, scale)
     elif noise_type == "speckle":
         # 随机选择斑点噪点方差
         variance = random.uniform(SPECKLE_VARIANCE_MIN, SPECKLE_VARIANCE_MAX)
