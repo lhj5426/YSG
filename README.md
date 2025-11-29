@@ -112,9 +112,11 @@ kuangwai
 
 另外 本模型也已实装在
 
-开源的有GUI的漫画软件BallonsTranslator上
+开源的有GUI的漫画软件BallonsTranslator 和 manga-translator-ui 上
 
 https://github.com/dmMaze/BallonsTranslator
+
+https://github.com/hgmzhn/manga-translator-ui
 
 感谢大佬支持并实装
 
