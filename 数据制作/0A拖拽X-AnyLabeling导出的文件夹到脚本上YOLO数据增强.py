@@ -83,6 +83,13 @@ ENABLE_COLOR_TRANSFORM = True
 # True: 为每张图片生成随机颜色变换版本
 # False: 不进行颜色变换
 
+COLOR_TRANSFORM_PROB = 0.5
+# 应用概率（0.0-1.0）
+# 1.0 = 100%应用（所有图片都变换）
+# 0.5 = 50%概率（默认）
+# 0.3 = 30%概率
+# 0.0 = 不应用
+
 # 颜色模式选择
 COLOR_CRAZY_MODE = True         # True=完全随机颜色（CSGO开箱风格，五彩斑斓）
                                 # False=微调模式（模拟不同光照，使用下面的参数）
@@ -98,6 +105,12 @@ ENABLE_NOISE = True
 # 是否启用噪点增强
 # True: 为每张图片添加噪点
 # False: 不添加噪点
+
+NOISE_PROB = 0.5
+# 应用概率（0.0-1.0），控制每种噪点类型的应用概率
+# 1.0 = 100%应用
+# 0.5 = 50%概率（默认）
+# 0.0 = 不应用
 
 # 噪点类型选择（可多选，用逗号分隔）
 # 可选值：
@@ -132,6 +145,12 @@ ENABLE_BRIGHTNESS_CONTRAST = True
 # True: 随机调整亮度和对比度
 # False: 不调整
 
+BRIGHTNESS_CONTRAST_PROB = 0.5
+# 应用概率（0.0-1.0）
+# 1.0 = 100%应用
+# 0.5 = 50%概率（默认）
+# 0.0 = 不应用
+
 # 亮度调整范围（随机）
 BRIGHTNESS_MIN = -30    # 最暗（负值变暗，避免全黑）
 BRIGHTNESS_MAX = 30     # 最亮（正值变亮，避免过曝）
@@ -139,6 +158,30 @@ BRIGHTNESS_MAX = 30     # 最亮（正值变亮，避免过曝）
 # 对比度调整范围（随机）
 CONTRAST_MIN = 0.7     # 最低对比度（<1降低对比度）
 CONTRAST_MAX = 1.3      # 最高对比度（>1增强对比度）
+# =====================================================
+
+# ================= 灰度化增强控制 =================
+ENABLE_GRAYSCALE = True
+# 是否启用灰度化增强（彩色转黑白）
+# True: 随机将部分图片转为灰度图
+# False: 不进行灰度化
+
+GRAYSCALE_PROB = 0.4
+# 应用概率（0.0-1.0）
+# 1.0 = 100%应用（所有图片都变黑白）
+# 0.5 = 50%概率（默认）
+# 0.0 = 不应用
+
+# 灰度化模式选择
+# 'standard'  -> 标准灰度（加权平均，最常用）
+# 'average'   -> 简单平均（R+G+B)/3
+# 'luminosity'-> 亮度模式（更接近人眼感知）
+GRAYSCALE_MODE = 'standard'
+
+# 是否保持3通道输出（兼容性更好）
+# True: 输出3通道灰度图（BGR格式，但三通道值相同）
+# False: 输出单通道灰度图
+GRAYSCALE_KEEP_3CH = True
 # =====================================================
 
 # ================= 类别ID替换功能（仅针对旋转标签OBB） =================
@@ -178,7 +221,7 @@ AUGMENTATION_RATIO = 0.4
 # ========================================================================
 # 【特殊模式】原图替换模式
 # ========================================================================
-ENABLE_REPLACE_ORIGINAL = True
+ENABLE_REPLACE_ORIGINAL = False
 # 是否启用原图替换模式
 # True: 直接覆盖原文件（不生成新文件）
 # False: 生成新文件到输出文件夹（默认模式）
@@ -529,6 +572,33 @@ def adjust_brightness_contrast(img):
     adjusted = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
     
     return adjusted
+
+
+# ============== 灰度化函数 ==============
+def apply_grayscale(img):
+    """
+    将彩色图像转换为灰度图
+    支持多种灰度化模式
+    """
+    if GRAYSCALE_MODE == 'average':
+        # 简单平均模式
+        gray = np.mean(img, axis=2).astype(np.uint8)
+    elif GRAYSCALE_MODE == 'luminosity':
+        # 亮度模式（更接近人眼感知）
+        # 公式：0.21*R + 0.72*G + 0.07*B
+        gray = (0.07 * img[:, :, 0] + 0.72 * img[:, :, 1] + 0.21 * img[:, :, 2]).astype(np.uint8)
+    else:
+        # 标准模式（OpenCV默认，加权平均）
+        # 公式：0.114*B + 0.587*G + 0.299*R
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    if GRAYSCALE_KEEP_3CH:
+        # 保持3通道输出（兼容性更好）
+        result = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    else:
+        result = gray
+    
+    return result
 
 
 # ============== 镜像/翻转 仿射矩阵与应用 ==============
@@ -937,12 +1007,13 @@ def _process_single_image_worker(img_name):
                     if mirror_mode:
                         apply_mirror = True
             
-            apply_color = should_apply_augmentation and ENABLE_COLOR_TRANSFORM and random.choice([True, False])
-            apply_brightness_contrast = should_apply_augmentation and ENABLE_BRIGHTNESS_CONTRAST and random.choice([True, False])
-            apply_gaussian = should_apply_augmentation and ENABLE_NOISE and 'gaussian' in noise_types and random.choice([True, False])
-            apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and random.choice([True, False])
-            apply_poisson = should_apply_augmentation and ENABLE_NOISE and 'poisson' in noise_types and random.choice([True, False])
-            apply_speckle = should_apply_augmentation and ENABLE_NOISE and 'speckle' in noise_types and random.choice([True, False])
+            apply_color = should_apply_augmentation and ENABLE_COLOR_TRANSFORM and (random.random() < COLOR_TRANSFORM_PROB)
+            apply_brightness_contrast = should_apply_augmentation and ENABLE_BRIGHTNESS_CONTRAST and (random.random() < BRIGHTNESS_CONTRAST_PROB)
+            apply_grayscale_aug = should_apply_augmentation and ENABLE_GRAYSCALE and (random.random() < GRAYSCALE_PROB)
+            apply_gaussian = should_apply_augmentation and ENABLE_NOISE and 'gaussian' in noise_types and (random.random() < NOISE_PROB)
+            apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and (random.random() < NOISE_PROB)
+            apply_poisson = should_apply_augmentation and ENABLE_NOISE and 'poisson' in noise_types and (random.random() < NOISE_PROB)
+            apply_speckle = should_apply_augmentation and ENABLE_NOISE and 'speckle' in noise_types and (random.random() < NOISE_PROB)
             
             # 应用增强
             final_img = img.copy()
@@ -959,6 +1030,8 @@ def _process_single_image_worker(img_name):
                 final_img = apply_random_color_transform(final_img)
             if apply_brightness_contrast:
                 final_img = adjust_brightness_contrast(final_img)
+            if apply_grayscale_aug:
+                final_img = apply_grayscale(final_img)
             if apply_gaussian:
                 final_img = apply_noise(final_img, 'gaussian')
             if apply_salt_pepper:
@@ -1013,6 +1086,8 @@ def _process_single_image_worker(img_name):
                 aug_info.append("颜色")
             if apply_brightness_contrast:
                 aug_info.append("亮度对比度")
+            if apply_grayscale_aug:
+                aug_info.append("灰度化")
             if apply_gaussian:
                 aug_info.append("高斯噪点")
             if apply_salt_pepper:
@@ -1036,7 +1111,7 @@ def _process_single_image_worker(img_name):
         return {'success': False, 'img_name': img_name, 'error': str(e)}
 
 
-def process_folder_all(folder_path):
+def process_folder_all(folder_path, queue_current=1, queue_total=1):
     _set_console_utf8()
 
     folder_path = os.path.normpath(os.fsdecode(os.fsencode(folder_path)))
@@ -1118,6 +1193,7 @@ def process_folder_all(folder_path):
     print_safe(f"BORDER_MODE: {BORDER_MODE}")
     print_safe(f"镜像/翻转模式: {flip_modes}")
     print_safe(f"随机颜色变换: {'开启' if ENABLE_COLOR_TRANSFORM else '关闭'}")
+    print_safe(f"灰度化增强: {'开启' if ENABLE_GRAYSCALE else '关闭'}")
     print_safe(f"噪点增强: {'开启' if ENABLE_NOISE else '关闭'}")
     if ENABLE_NOISE:
         print_safe(f"噪点类型: {noise_types}")
@@ -1280,6 +1356,8 @@ def process_folder_all(folder_path):
         print_safe(f"  映射: {LABEL_ID_REPLACE_MAP}")
     
     print_safe(f"预计生成: {total_tasks} 张增强图")
+    if queue_total > 1:
+        print_safe(f"当前队列: {queue_current}/{queue_total}")
     print_safe("")
 
     stats = {
@@ -1424,23 +1502,26 @@ def process_folder_all(folder_path):
                             if mirror_mode:
                                 apply_mirror = True
                     
-                    # 2.2 颜色变换（随机，仅当允许增强时）
-                    apply_color = should_apply_augmentation and ENABLE_COLOR_TRANSFORM and random.choice([True, False])
+                    # 2.2 颜色变换（按概率应用，仅当允许增强时）
+                    apply_color = should_apply_augmentation and ENABLE_COLOR_TRANSFORM and (random.random() < COLOR_TRANSFORM_PROB)
                     
-                    # 2.3 亮度/对比度（随机，仅当允许增强时）
-                    apply_brightness_contrast = should_apply_augmentation and ENABLE_BRIGHTNESS_CONTRAST and random.choice([True, False])
+                    # 2.3 亮度/对比度（按概率应用，仅当允许增强时）
+                    apply_brightness_contrast = should_apply_augmentation and ENABLE_BRIGHTNESS_CONTRAST and (random.random() < BRIGHTNESS_CONTRAST_PROB)
                     
-                    # 2.4 噪点（随机组合，仅当允许增强时）
-                    apply_gaussian = should_apply_augmentation and ENABLE_NOISE and 'gaussian' in noise_types and random.choice([True, False])
-                    apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and random.choice([True, False])
-                    apply_poisson = should_apply_augmentation and ENABLE_NOISE and 'poisson' in noise_types and random.choice([True, False])
-                    apply_speckle = should_apply_augmentation and ENABLE_NOISE and 'speckle' in noise_types and random.choice([True, False])
+                    # 2.4 灰度化（按概率应用，仅当允许增强时）
+                    apply_grayscale_aug = should_apply_augmentation and ENABLE_GRAYSCALE and (random.random() < GRAYSCALE_PROB)
                     
-                    # 2.5 确保至少应用一种变换（旋转或增强）
+                    # 2.5 噪点（按概率应用，仅当允许增强时）
+                    apply_gaussian = should_apply_augmentation and ENABLE_NOISE and 'gaussian' in noise_types and (random.random() < NOISE_PROB)
+                    apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and (random.random() < NOISE_PROB)
+                    apply_poisson = should_apply_augmentation and ENABLE_NOISE and 'poisson' in noise_types and (random.random() < NOISE_PROB)
+                    apply_speckle = should_apply_augmentation and ENABLE_NOISE and 'speckle' in noise_types and (random.random() < NOISE_PROB)
+                    
+                    # 2.6 确保至少应用一种变换（旋转或增强）
                     # 如果允许增强，确保至少应用一种增强
                     if should_apply_augmentation:
                         has_any_enhancement = (apply_rotation or apply_mirror or apply_color or 
-                                              apply_brightness_contrast or apply_gaussian or 
+                                              apply_brightness_contrast or apply_grayscale_aug or apply_gaussian or 
                                               apply_salt_pepper or apply_poisson or apply_speckle)
                         
                         if not has_any_enhancement:
@@ -1450,6 +1531,8 @@ def process_folder_all(folder_path):
                                 available_enhancements.append('color')
                             if ENABLE_BRIGHTNESS_CONTRAST:
                                 available_enhancements.append('brightness')
+                            if ENABLE_GRAYSCALE:
+                                available_enhancements.append('grayscale')
                             if ENABLE_NOISE and noise_types:
                                 available_enhancements.extend(noise_types)
                             if ENABLE_MIRROR_FLIP and len(flip_modes) > 0:
@@ -1461,6 +1544,8 @@ def process_folder_all(folder_path):
                                     apply_color = True
                                 elif forced_enhancement == 'brightness':
                                     apply_brightness_contrast = True
+                                elif forced_enhancement == 'grayscale':
+                                    apply_grayscale_aug = True
                                 elif forced_enhancement == 'mirror':
                                     mirror_mode = random.choice([m for m in flip_modes if m != 'none'])
                                     if mirror_mode:
@@ -1497,7 +1582,11 @@ def process_folder_all(folder_path):
                     if apply_brightness_contrast:
                         final_img = adjust_brightness_contrast(final_img)
                     
-                    # 2.4 应用噪点
+                    # 2.4 应用灰度化
+                    if apply_grayscale_aug:
+                        final_img = apply_grayscale(final_img)
+                    
+                    # 2.5 应用噪点
                     if apply_gaussian:
                         final_img = apply_noise(final_img, 'gaussian')
                     if apply_salt_pepper:
@@ -1576,6 +1665,8 @@ def process_folder_all(folder_path):
                         aug_info.append("颜色")
                     if apply_brightness_contrast:
                         aug_info.append("亮度对比度")
+                    if apply_grayscale_aug:
+                        aug_info.append("灰度化")
                     if apply_gaussian:
                         aug_info.append("高斯噪点")
                     if apply_salt_pepper:
@@ -1646,13 +1737,12 @@ def process_folder_all(folder_path):
     print_safe(f"总用时: {format_timedelta(elapsed)}")
     print_safe("=" * 60)
     
-    # 保存增强日志
+    # 保存增强日志（保存到脚本所在目录）
     if augmentation_log:
-        log_filename = "增强日志.log"
-        if ENABLE_REPLACE_ORIGINAL:
-            log_path = os.path.join(folder_path, log_filename)
-        else:
-            log_path = os.path.join(out_dir, log_filename)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        folder_name = os.path.basename(folder_path)
+        log_filename = f"增强日志_{folder_name}_{time.strftime('%Y%m%d_%H%M%S')}.log"
+        log_path = os.path.join(script_dir, log_filename)
         
         try:
             with open(log_path, "w", encoding="utf-8") as log_file:
@@ -1771,21 +1861,38 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print_safe("请将包含图片和TXT的文件夹拖拽到脚本上运行。")
+        print_safe("支持同时拖拽多个文件夹进行批量处理。")
         input("按回车退出...")
         sys.exit()
 
-    raw_folder = sys.argv[1].strip('"').strip("'")
-    folder = os.path.normpath(os.fsdecode(os.fsencode(raw_folder)))
-
-    if not os.path.isdir(folder):
-        print_safe(f"路径无效，请拖入文件夹：{folder}")
+    # 获取所有拖入的文件夹
+    folders = []
+    for arg in sys.argv[1:]:
+        raw_folder = arg.strip('"').strip("'")
+        folder = os.path.normpath(os.fsdecode(os.fsencode(raw_folder)))
+        if os.path.isdir(folder):
+            folders.append(folder)
+        else:
+            print_safe(f"跳过无效路径: {folder}")
+    
+    if not folders:
+        print_safe("没有有效的文件夹，请拖入文件夹。")
         input("按回车退出...")
         sys.exit()
+    
+    # 显示队列
+    print_safe("")
+    print_safe("=" * 60)
+    print_safe(f"检测到 {len(folders)} 个文件夹待处理：")
+    print_safe("-" * 60)
+    for i, f in enumerate(folders, 1):
+        print_safe(f"  [{i}] {os.path.basename(f)}")
+    print_safe("=" * 60)
+    print_safe("")
 
     # 根据模式选择处理方式
     if ENABLE_REPLACE_ORIGINAL:
         # 原图替换模式
-        print_safe("")
         print_safe("⚠️  警告：原图替换模式将直接覆盖原文件！")
         print_safe("⚠️  建议先备份数据！")
         print_safe("")
@@ -1795,7 +1902,18 @@ if __name__ == "__main__":
             input("按回车退出...")
             sys.exit()
     
-    # 执行标准处理流程
-    process_folder_all(folder)
+    # 依次处理每个文件夹
+    total_folders = len(folders)
+    for idx, folder in enumerate(folders, 1):
+        print_safe("")
+        print_safe("=" * 60)
+        print_safe(f"【队列 {idx}/{total_folders}】正在处理: {os.path.basename(folder)}")
+        print_safe("=" * 60)
+        process_folder_all(folder, queue_current=idx, queue_total=total_folders)
+        print_safe("")
     
-    input("\n处理完毕，按回车退出。")
+    print_safe("")
+    print_safe("=" * 60)
+    print_safe(f"全部完成！共处理 {total_folders} 个文件夹")
+    print_safe("=" * 60)
+    input("\n按回车退出。")
