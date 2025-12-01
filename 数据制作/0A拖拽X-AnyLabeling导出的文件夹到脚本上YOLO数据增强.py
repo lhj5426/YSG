@@ -184,6 +184,44 @@ GRAYSCALE_MODE = 'standard'
 GRAYSCALE_KEEP_3CH = True
 # =====================================================
 
+# ================= 扫描线效果增强控制 =================
+ENABLE_SCANLINE = True
+# 是否启用扫描线效果（模拟CRT显示器/打印瑕疵）
+# True: 为图片添加扫描线效果
+# False: 不添加扫描线
+
+SCANLINE_PROB = 0.5
+# 应用概率（0.0-1.0）
+# 1.0 = 100%应用
+# 0.5 = 50%概率（默认）
+# 0.0 = 不应用
+
+# 扫描线方向
+# 'horizontal' -> 水平扫描线（最常见）
+# 'vertical'   -> 垂直扫描线
+# 'both'       -> 水平+垂直（网格效果）
+# 'random'     -> 随机选择方向
+SCANLINE_DIRECTION = 'horizontal'
+
+# 扫描线间距（像素）- 随机范围
+SCANLINE_SPACING_MIN = 2    # 最小间距（密集扫描线）
+SCANLINE_SPACING_MAX = 6    # 最大间距（稀疏扫描线）
+
+# 扫描线粗细（像素）- 随机范围
+SCANLINE_THICKNESS_MIN = 1  # 最小粗细
+SCANLINE_THICKNESS_MAX = 2  # 最大粗细（1-3推荐）
+
+# 扫描线透明度（0.0-1.0）- 随机范围
+SCANLINE_OPACITY_MIN = 0.1  # 最小透明度（淡）
+SCANLINE_OPACITY_MAX = 0.4  # 最大透明度（明显）
+
+# 扫描线颜色
+# 'black'  -> 黑色扫描线（最常见）
+# 'white'  -> 白色扫描线
+# 'random' -> 随机黑色或白色
+SCANLINE_COLOR = 'black'
+# =====================================================
+
 # ================= 类别ID替换功能（仅针对旋转标签OBB） =================
 ENABLE_LABEL_ID_REPLACE = True
 # 是否启用类别ID替换功能
@@ -608,6 +646,56 @@ def apply_grayscale(img):
     return result
 
 
+# ============== 扫描线效果函数 ==============
+def apply_scanline_effect(img):
+    """
+    添加扫描线效果（模拟CRT显示器/打印瑕疵）
+    在图像上叠加水平或垂直的半透明线条
+    """
+    h, w = img.shape[:2]
+    result = img.copy().astype(np.float32)
+    
+    # 随机选择间距
+    spacing = random.randint(SCANLINE_SPACING_MIN, SCANLINE_SPACING_MAX)
+    
+    # 随机选择粗细
+    thickness = random.randint(SCANLINE_THICKNESS_MIN, SCANLINE_THICKNESS_MAX)
+    
+    # 随机选择透明度
+    opacity = random.uniform(SCANLINE_OPACITY_MIN, SCANLINE_OPACITY_MAX)
+    
+    # 确定扫描线颜色
+    if SCANLINE_COLOR == 'white':
+        line_color = 255.0
+    elif SCANLINE_COLOR == 'random':
+        line_color = 255.0 if random.random() > 0.5 else 0.0
+    else:  # 'black'
+        line_color = 0.0
+    
+    # 确定扫描线方向
+    direction = SCANLINE_DIRECTION
+    if direction == 'random':
+        direction = random.choice(['horizontal', 'vertical', 'both'])
+    
+    # 创建扫描线遮罩
+    if direction in ['horizontal', 'both']:
+        # 水平扫描线
+        for y in range(0, h, spacing):
+            for t in range(thickness):
+                if y + t < h:
+                    # 混合原图和扫描线颜色
+                    result[y + t, :] = result[y + t, :] * (1 - opacity) + line_color * opacity
+    
+    if direction in ['vertical', 'both']:
+        # 垂直扫描线
+        for x in range(0, w, spacing):
+            for t in range(thickness):
+                if x + t < w:
+                    result[:, x + t] = result[:, x + t] * (1 - opacity) + line_color * opacity
+    
+    return np.clip(result, 0, 255).astype(np.uint8)
+
+
 # ============== 镜像/翻转 仿射矩阵与应用 ==============
 def get_flip_mode_list(spec: str):
     if not ENABLE_MIRROR_FLIP:
@@ -1017,6 +1105,7 @@ def _process_single_image_worker(img_name):
             apply_color = should_apply_augmentation and ENABLE_COLOR_TRANSFORM and (random.random() < COLOR_TRANSFORM_PROB)
             apply_brightness_contrast = should_apply_augmentation and ENABLE_BRIGHTNESS_CONTRAST and (random.random() < BRIGHTNESS_CONTRAST_PROB)
             apply_grayscale_aug = should_apply_augmentation and ENABLE_GRAYSCALE and (random.random() < GRAYSCALE_PROB)
+            apply_scanline = should_apply_augmentation and ENABLE_SCANLINE and (random.random() < SCANLINE_PROB)
             apply_gaussian = should_apply_augmentation and ENABLE_NOISE and 'gaussian' in noise_types and (random.random() < NOISE_PROB)
             apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and (random.random() < NOISE_PROB)
             apply_poisson = should_apply_augmentation and ENABLE_NOISE and 'poisson' in noise_types and (random.random() < NOISE_PROB)
@@ -1039,6 +1128,8 @@ def _process_single_image_worker(img_name):
                 final_img = adjust_brightness_contrast(final_img)
             if apply_grayscale_aug:
                 final_img = apply_grayscale(final_img)
+            if apply_scanline:
+                final_img = apply_scanline_effect(final_img)
             if apply_gaussian:
                 final_img = apply_noise(final_img, 'gaussian')
             if apply_salt_pepper:
@@ -1095,6 +1186,8 @@ def _process_single_image_worker(img_name):
                 aug_info.append("亮度对比度")
             if apply_grayscale_aug:
                 aug_info.append("灰度化")
+            if apply_scanline:
+                aug_info.append("扫描线")
             if apply_gaussian:
                 aug_info.append("高斯噪点")
             if apply_salt_pepper:
@@ -1214,6 +1307,7 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
     print_safe(f"镜像/翻转模式: {flip_modes}")
     print_safe(f"随机颜色变换: {'开启' if ENABLE_COLOR_TRANSFORM else '关闭'}")
     print_safe(f"灰度化增强: {'开启' if ENABLE_GRAYSCALE else '关闭'}")
+    print_safe(f"扫描线效果: {'开启' if ENABLE_SCANLINE else '关闭'}")
     print_safe(f"噪点增强: {'开启' if ENABLE_NOISE else '关闭'}")
     if ENABLE_NOISE:
         print_safe(f"噪点类型: {noise_types}")
@@ -1531,6 +1625,9 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
                     # 2.4 灰度化（按概率应用，仅当允许增强时）
                     apply_grayscale_aug = should_apply_augmentation and ENABLE_GRAYSCALE and (random.random() < GRAYSCALE_PROB)
                     
+                    # 2.4.5 扫描线效果（按概率应用，仅当允许增强时）
+                    apply_scanline = should_apply_augmentation and ENABLE_SCANLINE and (random.random() < SCANLINE_PROB)
+                    
                     # 2.5 噪点（按概率应用，仅当允许增强时）
                     apply_gaussian = should_apply_augmentation and ENABLE_NOISE and 'gaussian' in noise_types and (random.random() < NOISE_PROB)
                     apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and (random.random() < NOISE_PROB)
@@ -1541,8 +1638,8 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
                     # 如果允许增强，确保至少应用一种增强
                     if should_apply_augmentation:
                         has_any_enhancement = (apply_rotation or apply_mirror or apply_color or 
-                                              apply_brightness_contrast or apply_grayscale_aug or apply_gaussian or 
-                                              apply_salt_pepper or apply_poisson or apply_speckle)
+                                              apply_brightness_contrast or apply_grayscale_aug or apply_scanline or 
+                                              apply_gaussian or apply_salt_pepper or apply_poisson or apply_speckle)
                         
                         if not has_any_enhancement:
                             # 如果没有任何增强，强制应用一种
@@ -1553,6 +1650,8 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
                                 available_enhancements.append('brightness')
                             if ENABLE_GRAYSCALE:
                                 available_enhancements.append('grayscale')
+                            if ENABLE_SCANLINE:
+                                available_enhancements.append('scanline')
                             if ENABLE_NOISE and noise_types:
                                 available_enhancements.extend(noise_types)
                             if ENABLE_MIRROR_FLIP and len(flip_modes) > 0:
@@ -1566,6 +1665,8 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
                                     apply_brightness_contrast = True
                                 elif forced_enhancement == 'grayscale':
                                     apply_grayscale_aug = True
+                                elif forced_enhancement == 'scanline':
+                                    apply_scanline = True
                                 elif forced_enhancement == 'mirror':
                                     mirror_mode = random.choice([m for m in flip_modes if m != 'none'])
                                     if mirror_mode:
@@ -1605,6 +1706,10 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
                     # 2.4 应用灰度化
                     if apply_grayscale_aug:
                         final_img = apply_grayscale(final_img)
+                    
+                    # 2.4.5 应用扫描线效果
+                    if apply_scanline:
+                        final_img = apply_scanline_effect(final_img)
                     
                     # 2.5 应用噪点
                     if apply_gaussian:
@@ -1687,6 +1792,8 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
                         aug_info.append("亮度对比度")
                     if apply_grayscale_aug:
                         aug_info.append("灰度化")
+                    if apply_scanline:
+                        aug_info.append("扫描线")
                     if apply_gaussian:
                         aug_info.append("高斯噪点")
                     if apply_salt_pepper:
