@@ -161,12 +161,12 @@ CONTRAST_MAX = 1.3      # 最高对比度（>1增强对比度）
 # =====================================================
 
 # ================= 灰度化增强控制 =================
-ENABLE_GRAYSCALE = True
+ENABLE_GRAYSCALE = False
 # 是否启用灰度化增强（彩色转黑白）
 # True: 随机将部分图片转为灰度图
 # False: 不进行灰度化
 
-GRAYSCALE_PROB = 0.4
+GRAYSCALE_PROB = 0.5
 # 应用概率（0.0-1.0）
 # 1.0 = 100%应用（所有图片都变黑白）
 # 0.5 = 50%概率（默认）
@@ -207,11 +207,18 @@ ENABLE_ROTATION_RATIO = True
 # True: 随机选择 AUGMENTATION_RATIO 比例的图片 → 旋转+增强，其他不处理
 # False: 100%图片都旋转 → 随机选择 AUGMENTATION_RATIO 比例的图片增强
 
-AUGMENTATION_RATIO = 0.4
-# 增强比例（0.0-1.0）
-# 例如：0.5 = 50%的图片
+# 增强比例（0.0-1.0）- 根据标签类型分别设置
+# 脚本会自动检测标签类型，并使用对应的增强比例
+
+AUGMENTATION_RATIO_OBB = 0.4
+# 旋转框（OBB）标签的增强比例
+# 例如：0.4 = 40%的图片
+
+AUGMENTATION_RATIO_HBB = 1.0
+# 水平框（HBB）标签的增强比例
+# 例如：1.0 = 100%的图片
 # 
-# 示例（100张旋转矩形图，AUGMENTATION_RATIO = 0.5）：
+# 示例（100张旋转矩形图，AUGMENTATION_RATIO_OBB = 0.5）：
 # - ENABLE_ROTATION_RATIO = True:  随机选50张 → 旋转+增强，其他50张不处理
 # - ENABLE_ROTATION_RATIO = False: 100张都旋转 → 随机选50张增强，其他50张只旋转
 # 
@@ -221,7 +228,7 @@ AUGMENTATION_RATIO = 0.4
 # ========================================================================
 # 【特殊模式】原图替换模式
 # ========================================================================
-ENABLE_REPLACE_ORIGINAL = False
+ENABLE_REPLACE_ORIGINAL = True
 # 是否启用原图替换模式
 # True: 直接覆盖原文件（不生成新文件）
 # False: 生成新文件到输出文件夹（默认模式）
@@ -1171,6 +1178,19 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
     else:
         print_safe("⚠️  未检测到标签文件或格式未知")
     
+    print_safe("")
+    
+    # 根据标签类型选择增强比例
+    if detected_format == 'hbb':
+        AUGMENTATION_RATIO = AUGMENTATION_RATIO_HBB
+        print_safe(f"✓ 使用水平框增强比例: {AUGMENTATION_RATIO * 100:.1f}%")
+    elif detected_format == 'obb':
+        AUGMENTATION_RATIO = AUGMENTATION_RATIO_OBB
+        print_safe(f"✓ 使用旋转框增强比例: {AUGMENTATION_RATIO * 100:.1f}%")
+    else:
+        # 混合或未知格式，使用OBB比例
+        AUGMENTATION_RATIO = AUGMENTATION_RATIO_OBB
+        print_safe(f"✓ 使用默认增强比例: {AUGMENTATION_RATIO * 100:.1f}%")
     print_safe("")
     # ============================================
 
