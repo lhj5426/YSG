@@ -197,29 +197,37 @@ SCANLINE_PROB = 0.5
 # 0.0 = 不应用
 
 # 扫描线方向
-# 'horizontal' -> 水平扫描线（最常见）
-# 'vertical'   -> 垂直扫描线
-# 'both'       -> 水平+垂直（网格效果）
-# 'random'     -> 随机选择方向
-SCANLINE_DIRECTION = 'horizontal'
+# 'horizontal'   -> 水平扫描线（最常见）
+# 'vertical'     -> 垂直扫描线
+# 'both'         -> 水平+垂直（网格效果）
+# 'random'       -> 随机选择（包含网格）
+# 'random_hv'    -> 随机横竖（只在水平和垂直之间随机，不含网格）
+SCANLINE_DIRECTION = 'random_hv'
 
 # 扫描线间距（像素）- 随机范围
-SCANLINE_SPACING_MIN = 2    # 最小间距（密集扫描线）
-SCANLINE_SPACING_MAX = 6    # 最大间距（稀疏扫描线）
+SCANLINE_SPACING_MIN = 5    # 最小间距（密集扫描线）
+SCANLINE_SPACING_MAX = 8    # 最大间距（稀疏扫描线）
 
 # 扫描线粗细（像素）- 随机范围
-SCANLINE_THICKNESS_MIN = 1  # 最小粗细
-SCANLINE_THICKNESS_MAX = 2  # 最大粗细（1-3推荐）
+SCANLINE_THICKNESS_MIN = 2  # 最小粗细
+SCANLINE_THICKNESS_MAX = 6  # 最大粗细（1-3推荐）
 
 # 扫描线透明度（0.0-1.0）- 随机范围
-SCANLINE_OPACITY_MIN = 0.1  # 最小透明度（淡）
-SCANLINE_OPACITY_MAX = 0.4  # 最大透明度（明显）
+SCANLINE_OPACITY_MIN = 0.4  # 最小透明度（淡）
+SCANLINE_OPACITY_MAX = 0.8  # 最大透明度（明显）
 
 # 扫描线颜色
 # 'black'  -> 黑色扫描线（最常见）
 # 'white'  -> 白色扫描线
 # 'random' -> 随机黑色或白色
-SCANLINE_COLOR = 'black'
+SCANLINE_COLOR = 'random'
+
+# 扫描线互斥设置（避免图片过暗）
+# True: 扫描线与该效果不同时应用
+# False: 允许同时应用
+SCANLINE_GRAYSCALE_MUTEX = False      # 扫描线与灰度化互斥
+SCANLINE_BRIGHTNESS_MUTEX = False     # 扫描线与亮度对比度互斥
+SCANLINE_NOISE_MUTEX = True          # 扫描线与噪点互斥
 # =====================================================
 
 # ================= 类别ID替换功能（仅针对旋转标签OBB） =================
@@ -248,11 +256,11 @@ ENABLE_ROTATION_RATIO = True
 # 增强比例（0.0-1.0）- 根据标签类型分别设置
 # 脚本会自动检测标签类型，并使用对应的增强比例
 
-AUGMENTATION_RATIO_OBB = 0.4
+AUGMENTATION_RATIO_OBB = 0.6
 # 旋转框（OBB）标签的增强比例
 # 例如：0.4 = 40%的图片
 
-AUGMENTATION_RATIO_HBB = 1.0
+AUGMENTATION_RATIO_HBB = 0.4
 # 水平框（HBB）标签的增强比例
 # 例如：1.0 = 100%的图片
 # 
@@ -676,6 +684,8 @@ def apply_scanline_effect(img):
     direction = SCANLINE_DIRECTION
     if direction == 'random':
         direction = random.choice(['horizontal', 'vertical', 'both'])
+    elif direction == 'random_hv':
+        direction = random.choice(['horizontal', 'vertical'])
     
     # 创建扫描线遮罩
     if direction in ['horizontal', 'both']:
@@ -1106,10 +1116,37 @@ def _process_single_image_worker(img_name):
             apply_brightness_contrast = should_apply_augmentation and ENABLE_BRIGHTNESS_CONTRAST and (random.random() < BRIGHTNESS_CONTRAST_PROB)
             apply_grayscale_aug = should_apply_augmentation and ENABLE_GRAYSCALE and (random.random() < GRAYSCALE_PROB)
             apply_scanline = should_apply_augmentation and ENABLE_SCANLINE and (random.random() < SCANLINE_PROB)
+            
             apply_gaussian = should_apply_augmentation and ENABLE_NOISE and 'gaussian' in noise_types and (random.random() < NOISE_PROB)
             apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and (random.random() < NOISE_PROB)
             apply_poisson = should_apply_augmentation and ENABLE_NOISE and 'poisson' in noise_types and (random.random() < NOISE_PROB)
             apply_speckle = should_apply_augmentation and ENABLE_NOISE and 'speckle' in noise_types and (random.random() < NOISE_PROB)
+            
+            # 扫描线互斥处理（避免图片过暗）
+            if apply_scanline:
+                if SCANLINE_GRAYSCALE_MUTEX and apply_grayscale_aug:
+                    # 扫描线与灰度化互斥，随机保留其中一个
+                    if random.random() > 0.5:
+                        apply_grayscale_aug = False
+                    else:
+                        apply_scanline = False
+                if SCANLINE_BRIGHTNESS_MUTEX and apply_brightness_contrast and apply_scanline:
+                    # 扫描线与亮度对比度互斥，随机保留其中一个
+                    if random.random() > 0.5:
+                        apply_brightness_contrast = False
+                    else:
+                        apply_scanline = False
+                if SCANLINE_NOISE_MUTEX and apply_scanline:
+                    # 扫描线与噪点互斥，如果有任何噪点，随机保留扫描线或所有噪点
+                    has_any_noise = apply_gaussian or apply_salt_pepper or apply_poisson or apply_speckle
+                    if has_any_noise:
+                        if random.random() > 0.5:
+                            apply_gaussian = False
+                            apply_salt_pepper = False
+                            apply_poisson = False
+                            apply_speckle = False
+                        else:
+                            apply_scanline = False
             
             # 应用增强
             final_img = img.copy()
@@ -1633,6 +1670,32 @@ def process_folder_all(folder_path, queue_current=1, queue_total=1):
                     apply_salt_pepper = should_apply_augmentation and ENABLE_NOISE and 'salt_pepper' in noise_types and (random.random() < NOISE_PROB)
                     apply_poisson = should_apply_augmentation and ENABLE_NOISE and 'poisson' in noise_types and (random.random() < NOISE_PROB)
                     apply_speckle = should_apply_augmentation and ENABLE_NOISE and 'speckle' in noise_types and (random.random() < NOISE_PROB)
+                    
+                    # 扫描线互斥处理（避免图片过暗）
+                    if apply_scanline:
+                        if SCANLINE_GRAYSCALE_MUTEX and apply_grayscale_aug:
+                            # 扫描线与灰度化互斥，随机保留其中一个
+                            if random.random() > 0.5:
+                                apply_grayscale_aug = False
+                            else:
+                                apply_scanline = False
+                        if SCANLINE_BRIGHTNESS_MUTEX and apply_brightness_contrast and apply_scanline:
+                            # 扫描线与亮度对比度互斥，随机保留其中一个
+                            if random.random() > 0.5:
+                                apply_brightness_contrast = False
+                            else:
+                                apply_scanline = False
+                        if SCANLINE_NOISE_MUTEX and apply_scanline:
+                            # 扫描线与噪点互斥，如果有任何噪点，随机保留扫描线或所有噪点
+                            has_any_noise = apply_gaussian or apply_salt_pepper or apply_poisson or apply_speckle
+                            if has_any_noise:
+                                if random.random() > 0.5:
+                                    apply_gaussian = False
+                                    apply_salt_pepper = False
+                                    apply_poisson = False
+                                    apply_speckle = False
+                                else:
+                                    apply_scanline = False
                     
                     # 2.6 确保至少应用一种变换（旋转或增强）
                     # 如果允许增强，确保至少应用一种增强
