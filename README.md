@@ -187,6 +187,20 @@ https://github.com/user-attachments/assets/676c02dd-1c7f-41c8-b16d-67f0d132d925
 
 数据还在调整中......
 
+2025年12月07日16点07分22秒
+
+
+初步支持了旋转检测
+本来现在都GEMINI3.0 大香蕉2.0了
+说实话已经没有什么动力去搞这东西了
+但是一看价格
+嘛 好贵 囊中羞涩的我 又有动力了
+穷使我进步 色使我努力
+
+https://github.com/user-attachments/assets/5d83ddad-bda4-4c30-b6d2-8d54acbe6c78
+
+
+
 2025年08月09日16点28分31秒
 
 不同类型标签的实时推理效果
