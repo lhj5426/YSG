@@ -7,6 +7,14 @@ import random
 import shutil
 from collections import defaultdict, Counter
 
+try:
+    from tqdm import tqdm
+except ImportError:
+    print("正在安装 tqdm 进度条库...")
+    import subprocess
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'tqdm', '-q'])
+    from tqdm import tqdm
+
 # ================== 高级设置 ==================
 ENABLE_TEST_SET = False  # 是否启用测试集
 
@@ -90,7 +98,10 @@ def split_dataset_mixed_folder(mixed_folder, queue_current=1, queue_total=1):
     file_op = shutil.move if move_files_instead_of_copy else shutil.copy
 
     def process_files(image_list, subset):
-        for image in image_list:
+        if not image_list:
+            return
+        desc = f"处理{subset}集"
+        for image in tqdm(image_list, desc=desc, unit="张", ncols=80, leave=True):
             basename = os.path.splitext(image)[0]
             image_path = os.path.join(mixed_folder, image)
             label_path = os.path.join(mixed_folder, basename + '.txt')
@@ -101,13 +112,13 @@ def split_dataset_mixed_folder(mixed_folder, queue_current=1, queue_total=1):
             try:
                 file_op(image_path, dst_img)
             except Exception as e:
-                print(f"[{subset}] 图片失败: {image} 错误: {e}")
+                tqdm.write(f"[{subset}] 图片失败: {image} 错误: {e}")
 
             if os.path.exists(label_path):
                 try:
                     file_op(label_path, dst_lbl)
                 except Exception as e:
-                    print(f"[{subset}] 标签失败: {basename}.txt 错误: {e}")
+                    tqdm.write(f"[{subset}] 标签失败: {basename}.txt 错误: {e}")
 
     process_files(train_images, 'train')
     process_files(val_images, 'val')
