@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 import re
 import shutil
@@ -7,6 +7,12 @@ from PIL import Image
 # ========= 可调节参数区域 =========
 # 是否生成每个文件夹的图像统计报告
 ENABLE_REPORT = True
+
+# 是否计算并修改文件夹标题添加横纵图多前缀
+ENABLE_ORIENTATION_PREFIX = True
+
+# 是否在处理完成后等待用户按键退出（True=等待查看日志，False=静默操作直接退出）
+WAIT_FOR_KEY_ON_EXIT = True
 
 # TXT模板路径
 SOURCE_TXT = r"J:\G\Desktop\biaoqian.txt"
@@ -24,14 +30,41 @@ def copy_first_image_as_cover(folder_path):
         return
     first_img = files[0]
     src = os.path.join(folder_path, first_img)
-    ext = os.path.splitext(first_img)[1]
-    dst = os.path.join(folder_path, f"cover{ext}")
+    ext = os.path.splitext(first_img)[1].lower()
+    
+    # 目标文件始终为 cover.jpg
+    dst = os.path.join(folder_path, "cover.jpg")
+    
     if not os.path.exists(dst):
         try:
-            shutil.copy(src, dst)
-            print(f"【Step1】已复制第一张图片：\n  {src}\n到\n  {dst}")
+            # 如果原图是 JPG 格式，直接复制
+            if ext in ('.jpg', '.jpeg'):
+                shutil.copy(src, dst)
+                print(f"【Step1】已复制第一张图片（JPG格式）：\n  {src}\n到\n  {dst}")
+            else:
+                # 如果不是 JPG 格式，转换为 JPG
+                with Image.open(src) as img:
+                    # 如果是 RGBA 模式（如 PNG 带透明通道），转换为 RGB
+                    if img.mode in ('RGBA', 'LA', 'P'):
+                        # 创建白色背景
+                        rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                        # 如果有 alpha 通道，使用它进行合成
+                        if img.mode == 'RGBA':
+                            rgb_img.paste(img, mask=img.split()[3])
+                        elif img.mode == 'LA':
+                            rgb_img.paste(img, mask=img.split()[1])
+                        else:  # P mode
+                            img = img.convert('RGBA')
+                            rgb_img.paste(img, mask=img.split()[3])
+                        img = rgb_img
+                    elif img.mode != 'RGB':
+                        img = img.convert('RGB')
+                    
+                    # 保存为 JPG 格式，质量设置为 95
+                    img.save(dst, 'JPEG', quality=95)
+                print(f"【Step1】已转换第一张图片为 JPG 格式：\n  {src} ({ext})\n到\n  {dst}")
         except Exception as e:
-            print(f"【Step1】复制 cover 失败：{e}")
+            print(f"【Step1】复制/转换 cover 失败：{e}")
     else:
         print(f"【Step1】cover 文件已存在：{dst}")
 
@@ -99,22 +132,27 @@ def generate_report_and_update_orientation(folder_path):
                         details.append(f"{f} => {w}x{h} => {orientation}")
                 except Exception:
                     print(f"【Step4】无法读取图片 {img_path}，跳过。")
-    base_name = os.path.basename(folder_path)
-    base_name_no_num = re.sub(r'^\[\d+\]', '', base_name).strip()
-    base_name_no_orient = re.sub(r'^(横向图多_|纵向图多_)', '', base_name_no_num)
-    orient_prefix = "横向图多_" if horz >= vert else "纵向图多_"
-    new_name = f"{orient_prefix}{base_name_no_orient}"
-    parent = os.path.dirname(folder_path)
-    new_folder_path = os.path.join(parent, new_name)
-    if new_folder_path != folder_path:
-        try:
-            os.rename(folder_path, new_folder_path)
-            print(f"【Step4】更新方向前缀成功：\n  原名称：{base_name}\n  新名称：{new_name}")
-            folder_path = new_folder_path
-        except Exception as e:
-            print(f"【Step4】更新方向前缀失败：{e}")
+    
+    # 只有在开关开启时才修改文件夹名称添加横纵图多前缀
+    if ENABLE_ORIENTATION_PREFIX:
+        base_name = os.path.basename(folder_path)
+        base_name_no_num = re.sub(r'^\[\d+\]', '', base_name).strip()
+        base_name_no_orient = re.sub(r'^(横向图多_|纵向图多_)', '', base_name_no_num)
+        orient_prefix = "横向图多_" if horz >= vert else "纵向图多_"
+        new_name = f"{orient_prefix}{base_name_no_orient}"
+        parent = os.path.dirname(folder_path)
+        new_folder_path = os.path.join(parent, new_name)
+        if new_folder_path != folder_path:
+            try:
+                os.rename(folder_path, new_folder_path)
+                print(f"【Step4】更新方向前缀成功：\n  原名称：{base_name}\n  新名称：{new_name}")
+                folder_path = new_folder_path
+            except Exception as e:
+                print(f"【Step4】更新方向前缀失败：{e}")
+        else:
+            print("【Step4】文件夹已包含正确的方向前缀。")
     else:
-        print("【Step4】文件夹已包含正确的方向前缀。")
+        print("【Step4】横纵图多前缀功能已关闭，跳过修改文件夹名称。")
 
     if ENABLE_REPORT:
         report_lines = []
@@ -179,7 +217,8 @@ def main():
     folder_paths = sys.argv[1:]
     if not folder_paths:
         print("请将文件夹拖拽到本脚本上运行！")
-        input("按任意键退出...")
+        if WAIT_FOR_KEY_ON_EXIT:
+            input("按任意键退出...")
         return
     print("待处理文件夹：")
     for idx, fp in enumerate(folder_paths, start=1):
@@ -190,7 +229,11 @@ def main():
             process_folder(fp)
         else:
             print(f"错误：{fp} 不是有效的文件夹路径")
-    input("\n全部处理完成！按任意键退出...")
+    print("\n全部处理完成！")
+    if WAIT_FOR_KEY_ON_EXIT:
+        input("按任意键退出...")
+    else:
+        print("静默模式：自动退出。")
 
 if __name__ == "__main__":
     main()
