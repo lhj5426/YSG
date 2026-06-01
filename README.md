@@ -187,6 +187,22 @@ https://github.com/user-attachments/assets/676c02dd-1c7f-41c8-b16d-67f0d132d925
 
 数据还在调整中......
 
+2026年06月02日02点56分51秒
+
+初步训练了RFDETR
+
+现在AI都很牛逼了 还在搞这种目标检测的低端玩意
+我很明白现在是49年入国军
+
+但是我就是有一个放不下的执念
+看视频可知 面对这种超长条的文字YOLO的检测效果很差
+无论数据量是几万 十几万 几十万 训练出来的YOLO 该检测不全还是检测不全
+但是换用RTDETR 和RFDETR之后 就都可以正常检测全了
+
+https://github.com/user-attachments/assets/0a87280c-ead1-4e09-aafc-6c47904edb61
+
+后面使用超级数据集来训练RFDETR 放弃使用YOLO 
+
 2026年02月24日00点44分19秒
 
 更新yolo26训练的水平检测模型和 OBB旋转检测模型1.0
@@ -205,21 +221,7 @@ https://github.com/user-attachments/assets/676c02dd-1c7f-41c8-b16d-67f0d132d925
 https://github.com/user-attachments/assets/5d83ddad-bda4-4c30-b6d2-8d54acbe6c78
 
 
-2026年06月02日02点56分51秒
 
-初步训练了RFDETR
-
-现在AI都很牛逼了 还在搞这种目标检测的低端玩意
-我很明白现在是49年入国军
-
-但是我就是有一个放不下的执念
-看视频可知 面对这种超长条的文字YOLO的检测效果很差
-无论数据量是几万 十几万 几十万 训练出来的YOLO 该检测不全还是检测不全
-但是换用RTDETR 和RFDETR之后 就都可以正常检测全了
-
-https://github.com/user-attachments/assets/0a87280c-ead1-4e09-aafc-6c47904edb61
-
-后面使用超级数据集来训练RFDETR 放弃使用YOLO 
 
 
 2025年08月09日16点28分31秒
